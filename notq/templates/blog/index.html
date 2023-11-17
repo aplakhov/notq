@@ -1,17 +1,18 @@
 {% extends 'base.html' %}
 
+{% block title %}Главная{% endblock %}
+
 {% block header %}
   <a class="navlink" style="color:black">главная</a>
-  <a class="navlink" href="javascript:toggle('bestmenu')">новое</a>
-  <a class="navlink" href="/best">лучшее</a>
+  <a class="navlink" href="/new">новое</a>
+  <a class="navlink" href="javascript:toggle('bestmenu')">лучшее</a>
   {% if g.user %}<a class="navlink" href="{{ url_for('blog.create') }}">написать</a>{% endif %}
-  <header id="bestmenu" style="display:none">
-    <a class="navlink" href="/best/day">день</a>
-    <a class="navlink" href="/best/week">неделя</a>
-    <a class="navlink" href="/best/month">месяц</a>
-    <a class="navlink" href="/best/year">год</a>
-    <a class="navlink" href="/best/all">за всё время</a>
-  </header>
+  </header><header id="bestmenu" style="display:none">
+  <a class="navlink" href="/best/day">день</a>
+  <a class="navlink" href="/best/week">неделя</a>
+  <a class="navlink" href="/best/month">месяц</a>
+  <a class="navlink" href="/best/year">год</a>
+  <a class="navlink" href="/best/all">за всё время</a>
 {% endblock %}
 
 {% block content %}
