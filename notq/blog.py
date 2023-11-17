@@ -60,7 +60,6 @@ def create():
             db.commit()
             # upvote just created post
             post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
-            print(post)
             if post:
                 db.execute(
                     'INSERT INTO vote (user_id, post_id, vote)'
@@ -189,5 +188,4 @@ def addcomment():
             )
             db.commit()
             anchor = "#answer" + str(comment['id'])
-        print("Almost ok, post_id=", post_id)
         return redirect(url_for('blog.one_post', id=post_id) + anchor)

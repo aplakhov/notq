@@ -57,7 +57,6 @@ def post_scoring(post, now):
     halflife = 18 * 3600
     timediff = (now - post['created']).total_seconds()
     decay = halflife / (halflife + timediff)
-    print(f"score for post {post['id']} is {decay} * {post['votes']+4}, timediff is {timediff}")
     return (post['votes'] + 4) * decay
 
 @cache.cached(timeout=10)
