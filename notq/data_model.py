@@ -76,6 +76,20 @@ def get_top_posts():
     ]
     return top_posts
 
+@cache.cached(timeout=60)
+def get_user_posts(username):
+    db = get_db()
+    user_posts = db.execute(
+        'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
+        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' JOIN vote v ON v.post_id = p.id'
+        ' WHERE username == ?'
+        ' GROUP BY p.id'
+        ' ORDER BY p.created DESC', (username,)
+    ).fetchall()
+    ncomments = get_posts_comments_number()
+    return [post_from_sql_row(p, ncomments, False) for p in user_posts]
+
 def readable_timediff(created):
     diff = (datetime.now() - created).total_seconds()
     if diff < 60:

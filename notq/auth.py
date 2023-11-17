@@ -1,4 +1,5 @@
 import functools
+import re
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
@@ -9,6 +10,10 @@ from notq.db import get_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+usernamere = re.compile("^[A-Za-z0-9_+-]+$")
+def check_username(username):
+    return usernamere.match(username)
+
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
@@ -18,9 +23,14 @@ def register():
         error = None
 
         if not username:
-            error = 'Username is required.'
+            error = 'Нужно указать имя пользователя.'
+        elif not check_username(username):
+            error = 'Имя пользователя может состоять только из латиницы, цифр и символов +, -, _.'
+            ' Это нужно для того, чтобы адреса страниц пользователей были короткими и запоминающимися.'
+        elif len(username) > 100:
+            error = "Слишком длинное имя пользователя."
         elif not password:
-            error = 'Password is required.'
+            error = 'Нужно указать пароль.'
 
         if error is None:
             try:

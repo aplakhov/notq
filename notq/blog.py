@@ -6,7 +6,7 @@ from werkzeug.exceptions import abort
 from notq.auth import login_required
 from notq.db import get_db
 from notq.markup import make_html
-from notq.data_model import add_comment, get_top_posts, get_user_votes_for_comments, get_user_votes_for_posts, get_posts_by_id
+from notq.data_model import add_comment, get_top_posts, get_user_posts, get_user_votes_for_comments, get_user_votes_for_posts, get_posts_by_id
 
 bp = Blueprint('blog', __name__)
 
@@ -18,6 +18,15 @@ def index():
     else:
         upvoted = downvoted = []
     return render_template('blog/index.html', posts=posts, upvoted=upvoted, downvoted=downvoted)
+
+@bp.route('/u/<username>')
+def userpage(username):
+    posts = get_user_posts(username)
+    if g.user:
+        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
+    else:
+        upvoted = downvoted = []
+    return render_template('blog/userpage.html', username=username, posts=posts, upvoted=upvoted, downvoted=downvoted)
 
 @bp.route('/<int:id>')
 def one_post(id):
