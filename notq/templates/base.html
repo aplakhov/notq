@@ -1,0 +1,26 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width">
+<title>{% block title %}{% endblock %} - notq</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script type="text/javascript" src="{{ url_for('static', filename='voting.js') }}"></script>
+<nav>
+  <img class="logo" src="{{ url_for('static', filename='logo.png') }}"/>
+  <h1>notq</h1>
+  <ul>
+    {% if g.user %}
+      <li><span><img src="{{ url_for('static', filename='silver.png') }}"/>{{ g.user['username'] }}</span>
+    {% else %}
+      <li><a href="{{ url_for('auth.register') }}">Register</a>
+      <li><a href="{{ url_for('auth.login') }}">Log In</a>
+    {% endif %}
+  </ul>
+</nav>
+<section class="content">
+  <header>
+    {% block header %}{% endblock %}
+  </header>
+  {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</section>

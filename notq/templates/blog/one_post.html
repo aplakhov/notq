@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <a class="navlink" href="/">главная</a>
+  <a class="navlink">новое</a>
+  <a class="navlink">лучшее</a>
+  {% if g.user %}
+  <a class="navlink" href="{{ url_for('blog.create') }}">написать</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% for post in posts %}
+    {% include 'blog/post_content.html' %}
+    <form method="post" action="addcomment" id="sendanswer">
+        <label for="text">Ответить</label>
+        <input type="hidden" name="thing" value="{{ post['id'] }}">
+        <textarea name="text"></textarea>
+        <input type="submit" value="Отправить">
+    </form>
+    {% for comment in post['comments'] recursive %}
+      <details {% if not comment['closed'] %}open="1"{% endif %} id="answer{{ comment['id'] }}">
+        <summary class="{% if g.user and g.user['id'] == comment['author_id'] %}thiscommentheader{% else %}commentheader{% endif %}">
+          <small><a class="vote" id="uvc{{comment['id']}}" {% if comment['id'] in cupvoted %} style="color: #00a000" {% endif %} href="javascript:votec({{post['id']}},{{comment['id']}},1)" title="Больше такого">▲</a></small>
+          <small id="nvc{{comment['id']}}" style="color:gray">{{comment['votes']}}</small>
+          <small><a class="vote" id="dvc{{comment['id']}}" {% if comment['id'] in cdownvoted %} style="color: #f00000" {% endif %} href="javascript:votec({{post['id']}},{{comment['id']}},-1)" title="Меньше такого">▼</a></small>
+          <strong style="margin:4px"><img src="{{ url_for('static', filename='silver.png') }}"/>{{ comment['username'] }}</strong>
+          <small style="color:gray">{{ comment['created' ]}}</small>
+        </summary>
+        {{comment['rendered']|safe}}
+        <small>
+          <details>
+            <summary><span class="inlineaction">ответить</span></summary>
+            <form method="post" action="addcomment">
+              <input type="hidden" name="thing" value="{{ post['id'] }}">
+              <input type="hidden" name="parent" value="{{ comment['id'] }}">
+              <textarea name="text"></textarea>
+              <input type="submit" value="Отправить">
+            </form>
+          </details>
+        </small>
+        {% if comment.children -%}
+            <ul>{{ loop(comment.children) }}</ul>
+        {% endif %}
+      </details>
+    {% endfor %}
+  {% endfor %}
+{% endblock %}
