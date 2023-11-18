@@ -36,13 +36,14 @@ nav ul li a, nav ul li span { display: block; padding: 0.5rem; color: white; }
 input.danger { color: #cc2f2e; }
 input[type=submit] { align-self: start; min-width: 10em; }
 
+/* register page */
+.registerhint { margin-top:0px; color:gray; }
 
-
+/* mobile-friendly youtube embed container */
 .youtube {
     aspect-ratio: 16/9;
     max-width: 100%
 }
-
 .embed-container { 
         position: relative; 
         padding-bottom: 56.25%;

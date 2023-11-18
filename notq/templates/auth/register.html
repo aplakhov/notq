@@ -1,15 +1,20 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Register{% endblock %}</h1>
+  <h1>{% block title %}Регистрация{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-  <form method="post">
-    <label for="username">Username</label>
-    <input name="username" id="username" required>
-    <label for="password">Password</label>
-    <input type="password" name="password" id="password" required>
-    <input type="submit" value="Register">
-  </form>
+<form method="post">
+  <label for="username">Имя пользователя<font color="red">*</font></label>
+  <input name="username" id="username" required style="margin-bottom:unset">
+  <p class="registerhint">можно использовать буквы латиницы, цифры и символ &laquo;-&raquo; (минус)</p>
+  <label for="password">Пароль<font color="red">*</font></label>
+  <input type="password" name="password" id="password" required style="margin-bottom:unset">
+  <p class="registerhint">может быть любым, у нас нет <a href="https://xkcd.com/936/">искусственных&nbsp;правил</a></p>
+  <label for="password">Золотой билет</label>
+  <input name="golden" id="golden" style="margin-bottom:unset">
+  <p class="registerhint">если у вас его нет или вы не знаете, что это, оставьте поле пустым</p>
+  <input type="submit" value="Зарегистрироваться">
+</form>
 {% endblock %}

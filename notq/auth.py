@@ -10,7 +10,7 @@ from notq.db import get_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-usernamere = re.compile("^[A-Za-z0-9_+-]+$")
+usernamere = re.compile("^[A-Za-z0-9-]+$")
 def check_username(username):
     return usernamere.match(username)
 
@@ -25,7 +25,7 @@ def register():
         if not username:
             error = 'Нужно указать имя пользователя.'
         elif not check_username(username):
-            error = 'Имя пользователя может состоять только из латиницы, цифр и символов +, -, _.'
+            error = 'Имя пользователя может состоять только из латиницы, цифр и символа "-".'
             ' Это нужно для того, чтобы адреса страниц пользователей были короткими и запоминающимися.'
         elif len(username) > 100:
             error = "Слишком длинное имя пользователя."
@@ -59,17 +59,14 @@ def login():
             'SELECT * FROM user WHERE username = ?', (username,)
         ).fetchone()
 
-        if user is None:
-            error = 'Incorrect username.'
-        elif not check_password_hash(user['password'], password):
-            error = 'Incorrect password.'
+        error = (user is None) or (not check_password_hash(user['password'], password))
 
-        if error is None:
+        if not error:
             session.clear()
             session['user_id'] = user['id']
             return redirect(url_for('index'))
 
-        flash(error)
+        flash('Неверное имя пользователя или пароль. Возможно, вы имели в виду "correct horse battery staple"?')
 
     return render_template('auth/login.html')
 
