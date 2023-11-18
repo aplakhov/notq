@@ -9,7 +9,7 @@
   <h1>notq</h1>
   <ul>
     {% if g.user %}
-      <li><span><img src="{{ url_for('static', filename='silver.png') }}"/>{{ g.user['username'] }}</span>
+      <li><span>{% set username=g.user['username'] %}{% include 'user.html' %}</span>
     {% else %}
       <li><a href="{{ url_for('auth.register') }}">Register</a>
       <li><a href="{{ url_for('auth.login') }}">Log In</a>

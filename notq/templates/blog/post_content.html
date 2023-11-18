@@ -6,7 +6,7 @@
         <a class="vote" id="dv{{post['id']}}" {% if post['id'] in downvoted %} style="color: #f00000" {% endif %} href="javascript:vote({{post['id']}},-1)" title="Меньше такого">▼</a></div>
         <div class="middle">
           <a href="{{ url_for('blog.one_post', id=post['id']) }}"><h1>{{ post['title'] }}</h1></a>
-        <div class="about">{{ post['username'] }}, {{ post['created'].strftime('%d-%m-%Y') }}</div>
+        <div class="about">{% set username=post['username'] %}{% include 'user.html' %}, {{ post['created'].strftime('%d-%m-%Y') }}</div>
       </div>
       {% if g.user['id'] == post['author_id'] %}
         <a class="action" href="{{ url_for('blog.update', id=post['id']) }}" title="Отредактировать">✎</a>
