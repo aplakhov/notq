@@ -37,6 +37,17 @@ def make_comments_string(n):
         return str(n) + " ответа"
     return str(n) + " ответов"
 
+def readable_timediff(created):
+    diff = (datetime.now() - created).total_seconds()
+    if diff < 60:
+        return "только что"
+    elif diff < 3600:
+        return str(int(diff//60)) + " мин назад"
+    elif diff < 24 * 3600:
+        return str(int(diff//3600)) + " ч назад"
+    else:
+        return created.strftime('%d-%m-%Y')
+
 def post_from_sql_row(p, ncomments, add_comments):
     nc = 0
     if ncomments and p['id'] in ncomments:
@@ -45,7 +56,7 @@ def post_from_sql_row(p, ncomments, add_comments):
         'id': p['id'],
         'title': p['title'],
         'rendered': p['rendered'],
-        'created': p['created'],
+        'created': readable_timediff(p['created']),
         'author_id': p['author_id'],
         'username': p['username'],
         'votes': p['votes'],
@@ -77,6 +88,20 @@ def get_top_posts():
         post_from_sql_row(p, ncomments, False) for p in nlargest(100, all_posts, key=lambda post: post_scoring(post, now))
     ]
     return top_posts
+
+@cache.cached(timeout=10)
+def get_new_posts():
+    db = get_db()
+    new_posts = db.execute(
+        'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
+        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' JOIN vote v ON v.post_id = p.id'
+        ' GROUP BY p.id'
+        ' ORDER BY p.created DESC'
+        ' LIMIT 100'
+    ).fetchall()
+    ncomments = get_posts_comments_number()
+    return [ post_from_sql_row(p, ncomments, False) for p in new_posts ]
 
 @cache.cached(timeout=60)
 def get_user_posts(username):
@@ -110,31 +135,22 @@ def get_user_stats(username):
 
 def get_about_post(username):
     db = get_db()
-    if not username or username == g.user['username']:
-        userdata = g.user
+    if username == g.user['username']:
+        about_post_id = g.user['about_post_id']
     else:
         userdata = db.execute(
             'SELECT about_post_id FROM user WHERE username = ?', (username,)
         ).fetchone()
-    if userdata and 'about_post_id' in userdata:
+        if userdata:
+            about_post_id = userdata['about_post_id']
+    if about_post_id:
         return db.execute(
             'SELECT * FROM post WHERE id = ?',
-            (userdata['about_post_id'], )
+            (about_post_id, )
         ).fetchone()
     else:
         default_about = 'Этот пользователь пока ничего о себе не написал'
         return { 'body': default_about, 'rendered': default_about }
-
-def readable_timediff(created):
-    diff = (datetime.now() - created).total_seconds()
-    if diff < 60:
-        return "только что"
-    elif diff < 3600:
-        return str(int(diff//60)) + " мин назад"
-    elif diff < 24 * 3600:
-        return str(int(diff//3600)) + " ч назад"
-    else:
-        return created.strftime('%d-%m-%Y')
 
 def comment_from_data(c, commentvotes):
     res = {

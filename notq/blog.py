@@ -19,6 +19,15 @@ def index():
         upvoted = downvoted = []
     return render_template('blog/index.html', posts=posts, upvoted=upvoted, downvoted=downvoted)
 
+@bp.route('/new')
+def new():
+    posts = get_new_posts()
+    if g.user:
+        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
+    else:
+        upvoted = downvoted = []
+    return render_template('blog/new.html', posts=posts, upvoted=upvoted, downvoted=downvoted)
+
 @bp.route('/u/<username>')
 def userpage(username):
     posts = get_user_posts(username)
@@ -143,7 +152,7 @@ def about():
                 db.commit()
             return redirect(url_for('blog.userpage', username=g.user['username']))
 
-    return render_template('blog/about.html', post=get_about_post())
+    return render_template('blog/about.html', post=get_about_post(g.user['username']))
 
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required
