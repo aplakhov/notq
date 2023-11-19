@@ -8,5 +8,5 @@
 </header><header>
 <a class="navlink" {% if not besttype %}style="color:black"{% else %}href="{{besturl}}"{% endif %}>посты</a>
 <a class="navlink" {% if besttype == "users" %}style="color:black"{% else %}href="{{besturl}}/users"{% endif %}>пользователи</a>
-<a class="navlink" {% if besttype == "comments" %}style="color:black"{% else %}href="{{besturl}}/comments"{% endif %}>комментарии</a>
+<a class="navlink" {% if besttype == "comments" %}style="color:black"{% else %}href="{{besturl}}/comments"{% endif %}>ответы</a>
 {% endif %}
