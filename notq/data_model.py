@@ -106,8 +106,7 @@ def get_new_posts():
     ncomments = get_posts_comments_number()
     return [ post_from_sql_row(p, ncomments, False) for p in new_posts ]
 
-@cache.memoize(timeout=30)
-def get_best_posts(period):
+def get_starting_date(period):
     now = datetime.now()
     if period == "day":
         start = now - timedelta(days=1)
@@ -119,7 +118,11 @@ def get_best_posts(period):
         start = now - timedelta(days=365)
     else:
         start = now - timedelta(days=100*365)
-    print(f"Selecting posts before {start} ({start.timestamp()})")
+    return start
+
+@cache.memoize(timeout=30)
+def get_best_posts(period):
+    start = get_starting_date(period)
     db = get_db()
     period_posts = db.execute(
         'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
@@ -162,23 +165,6 @@ def get_user_stats(username):
     if userdata is None:
         return None, 0, 0
     return userdata['created'].strftime('%d-%m-%Y'), user_posts['n'], user_comments['n']
-
-@cache.memoize(timeout=30)
-def get_user_karma(username):
-    db = get_db()
-    posts = db.execute(
-        'SELECT SUM(v.vote) AS votes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE username == ?', (username,)
-    ).fetchone()
-    comments = db.execute(
-        'SELECT SUM(v.vote) AS votes'
-        ' FROM comment c JOIN user u ON c.author_id = u.id'
-        ' JOIN commentvote v ON v.comment_id = c.id'
-        ' WHERE username == ?', (username,)
-    ).fetchone()
-    return posts['votes'] + comments['votes'] // 3
 
 def get_about_post(username):
     db = get_db()

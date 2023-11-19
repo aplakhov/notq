@@ -7,6 +7,7 @@ from notq.auth import login_required
 from notq.db import get_db
 from notq.markup import make_html
 from notq.data_model import *
+from notq.karma import get_user_karma, get_best_users
 
 bp = Blueprint('blog', __name__)
 
@@ -60,9 +61,11 @@ def best(period):
 @bp.route('/best/<period>/users')
 def best_users(period):
     title = 'Лучшие пользователи ' + best_title(period)
+    users = get_best_users(period)
     return render_template('blog/best_users.html',
                            besturl=url_for('blog.best', period=period),
                            besttype='users',
+                           users=str(users),
                            best_title=title)
 
 @bp.route('/best/<period>/comments')
@@ -167,7 +170,7 @@ def get_post_to_update(id):
 @login_required
 def about():
     if request.method == 'POST':
-        title = "🕮 О себе"
+        title = "💬 О себе"
         body = request.form['body']
         error = check_post(title, body)
 
