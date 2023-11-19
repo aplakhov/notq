@@ -11,8 +11,8 @@
     {% if g.user %}
       <li><span>{% set username=g.user['username'] %}{% include 'user.html' %}</span>
     {% else %}
-      <li><a href="{{ url_for('auth.register') }}">Register</a>
-      <li><a href="{{ url_for('auth.login') }}">Log In</a>
+      <li><a href="{{ url_for('auth.register') }}">Зарегистрироваться</a>
+      <li><a href="{{ url_for('auth.login') }}">Войти</a>
     {% endif %}
   </ul>
 </nav>

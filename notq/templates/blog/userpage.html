@@ -21,7 +21,7 @@
       <div class="middle"><h1 class="bigusername">{{ name }}</h1></div>
     </header>
     {% if g.user and g.user['username'] == name %}
-    это вы (<a href="/auth/logout">разлогиниться</a>)
+    <div style="background-color: #f0f0f0">это вы (<a href="/auth/logout">разлогиниться</a>)</div>
     {% endif %}
     <p class="body">С нами с <strong>{{ user['created' ]}}</strong><br/>
     Карма: <strong>{{ user['karma']}}</strong><br/>
