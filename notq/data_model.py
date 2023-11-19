@@ -1,5 +1,5 @@
 from heapq import nlargest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import g
 from notq.cache import cache
@@ -66,11 +66,14 @@ def post_from_sql_row(p, ncomments, add_comments):
         res['comments'] = get_post_comments(p['id'])
     return res
 
-def post_scoring(post, now):
+def top_post_scoring(post, now):
     halflife = 18 * 3600
     timediff = (now - post['created']).total_seconds()
     decay = halflife / (halflife + timediff)
     return (post['votes'] + 4) * decay
+
+def best_post_scoring(post):
+    return post['votes']
 
 @cache.cached(timeout=10)
 def get_top_posts():
@@ -85,7 +88,7 @@ def get_top_posts():
     now = datetime.now()
     ncomments = get_posts_comments_number()
     top_posts = [
-        post_from_sql_row(p, ncomments, False) for p in nlargest(100, all_posts, key=lambda post: post_scoring(post, now))
+        post_from_sql_row(p, ncomments, False) for p in nlargest(100, all_posts, key=lambda post: top_post_scoring(post, now))
     ]
     return top_posts
 
@@ -102,6 +105,33 @@ def get_new_posts():
     ).fetchall()
     ncomments = get_posts_comments_number()
     return [ post_from_sql_row(p, ncomments, False) for p in new_posts ]
+
+@cache.memoize(timeout=30)
+def get_best_posts(period):
+    now = datetime.now()
+    if period == "day":
+        start = now - timedelta(days=1)
+    elif period == "week":
+        start = now - timedelta(days=7)
+    elif period == "month":
+        start = now - timedelta(days=30)
+    elif period == "year":
+        start = now - timedelta(days=365)
+    else:
+        start = now - timedelta(days=100*365)
+    print(f"Selecting posts before {start} ({start.timestamp()})")
+    db = get_db()
+    period_posts = db.execute(
+        'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
+        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' JOIN vote v ON v.post_id = p.id'
+        ' WHERE p.created > ?'
+        ' GROUP BY p.id', (start,)
+    ).fetchall()
+    ncomments = get_posts_comments_number()
+    return [
+        post_from_sql_row(p, ncomments, False) for p in nlargest(100, period_posts, key=lambda post: best_post_scoring(post))
+    ]
 
 @cache.cached(timeout=60)
 def get_user_posts(username):

@@ -28,6 +28,30 @@ def new():
         upvoted = downvoted = []
     return render_template('blog/new.html', posts=posts, upvoted=upvoted, downvoted=downvoted)
 
+@bp.route('/best/<period>')
+def best(period):
+    posts = get_best_posts(period)
+    if g.user:
+        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
+    else:
+        upvoted = downvoted = []
+    if period == "day":
+        title = 'Лучшее за день'
+    elif period == "week":
+        title = 'Лучшее за неделю'
+    elif period == "month":
+        title = 'Лучшее за месяц'
+    elif period == "year":
+        title = 'Лучшее за год'
+    else:
+        title = 'Лучшее за всё время'
+    return render_template('blog/best.html', 
+                           besturl=url_for('blog.best', period=period), 
+                           posts=posts, 
+                           upvoted=upvoted, 
+                           downvoted=downvoted,
+                           best_title=title)
+
 @bp.route('/u/<username>')
 def userpage(username):
     posts = get_user_posts(username)
