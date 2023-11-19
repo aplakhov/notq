@@ -10,7 +10,6 @@ details { margin-bottom: 12px; }
 details > p { margin-bottom: 2px; margin-top: 8px; }
 nav { background: #3264c8; display: flex; align-items: center; padding: 0 0.5rem; }
 nav h1 { flex: auto; margin: 0; color: white; }
-nav h1 a { text-decoration: none; padding: 0.25rem 0.5rem; }
 nav ul  { display: flex; list-style: none; margin: 0; padding: 0; }
 nav ul li a, nav ul li span { display: block; padding: 0.5rem; color: white; }
 .content { padding: 0 1rem 1rem; }
