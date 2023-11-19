@@ -1,5 +1,7 @@
 from heapq import nlargest
 from datetime import datetime
+
+from flask import g
 from notq.cache import cache
 from notq.db import get_db
 
@@ -89,6 +91,39 @@ def get_user_posts(username):
     ).fetchall()
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in user_posts]
+
+@cache.memoize(timeout=30)
+def get_user_stats(username):
+    db = get_db()
+    user_posts = db.execute(
+        'SELECT COUNT(*) AS n FROM post p JOIN user u ON p.author_id = u.id'
+        ' WHERE username == ?', (username,)
+    ).fetchone()
+    user_comments = db.execute(
+        'SELECT COUNT(*) AS n FROM comment c JOIN user u ON c.author_id = u.id'
+        ' WHERE username == ?', (username,)
+    ).fetchone()
+    userdata = db.execute('SELECT * FROM user WHERE username ==?', (username,)).fetchone()
+    if userdata is None:
+        return None, 0, 0
+    return userdata['created'].strftime('%d-%m-%Y'), user_posts['n'], user_comments['n']
+
+def get_about_post(username):
+    db = get_db()
+    if not username or username == g.user['username']:
+        userdata = g.user
+    else:
+        userdata = db.execute(
+            'SELECT about_post_id FROM user WHERE username = ?', (username,)
+        ).fetchone()
+    if userdata and 'about_post_id' in userdata:
+        return db.execute(
+            'SELECT * FROM post WHERE id = ?',
+            (userdata['about_post_id'], )
+        ).fetchone()
+    else:
+        default_about = 'Этот пользователь пока ничего о себе не написал'
+        return { 'body': default_about, 'rendered': default_about }
 
 def readable_timediff(created):
     diff = (datetime.now() - created).total_seconds()

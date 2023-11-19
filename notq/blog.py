@@ -6,7 +6,7 @@ from werkzeug.exceptions import abort
 from notq.auth import login_required
 from notq.db import get_db
 from notq.markup import make_html
-from notq.data_model import add_comment, get_top_posts, get_user_posts, get_user_votes_for_comments, get_user_votes_for_posts, get_posts_by_id
+from notq.data_model import *
 
 bp = Blueprint('blog', __name__)
 
@@ -26,12 +26,15 @@ def userpage(username):
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
     else:
         upvoted = downvoted = []
+    created, nposts, ncomments = get_user_stats(username)
+    if not created:
+        abort(404, f"User {username} doesn't exist.") 
     user = {
-        'created': '16.11.2023',
+        'created': created,
         'karma': 8,
-        'nposts': 3,
-        'ncomments': 18,
-        'about': get_about_post()['rendered']
+        'nposts': nposts,
+        'ncomments': ncomments,
+        'about': get_about_post(username)['rendered']
     }
     return render_template('blog/userpage.html', name=username, posts=posts, upvoted=upvoted, downvoted=downvoted, user=user)
 
@@ -104,16 +107,6 @@ def get_post_to_update(id, check_author=True):
         abort(403)
 
     return post
-
-def get_about_post():
-    if g.user['about_post_id']:
-        return get_db().execute(
-            'SELECT * FROM post WHERE id = ?',
-            (g.user['about_post_id'], )
-        ).fetchone()
-    else:
-        default_about = 'Этот пользователь пока ничего о себе не написал'
-        return { 'body': default_about, 'rendered': default_about }
 
 @bp.route('/about', methods=('GET', 'POST'))
 @login_required
