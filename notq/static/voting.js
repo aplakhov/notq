@@ -1,7 +1,11 @@
-function vote_any(id, newVal, suffix, handler) {
+function vote_any(id, newVal, suffix, handler, canVote) {
     let v = document.getElementById("nv" + suffix + id)
     let u = document.getElementById("uv" + suffix + id)
     let d = document.getElementById("dv" + suffix + id)
+    if (!canVote) {
+        flash(v.parentNode.parentNode, "Чтобы голосовать, зарегистрируйтесь")
+        return;
+    }
     let curVal = 0
     if (u.style.color)
         curVal = 1
@@ -22,12 +26,12 @@ function vote_any(id, newVal, suffix, handler) {
     fetch(handler + urlVal, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })
 }
 
-function vote(postid, newVal) {
+function vote(postid, newVal, canVote) {
     const handler = "/" + postid + "/vote/"
-    vote_any(postid, newVal, "", handler)
+    vote_any(postid, newVal, "", handler, canVote)
 }
 
-function votec(postid, commentid, newVal) {
+function votec(postid, commentid, newVal, canVote) {
     const handler = "/" + postid + "/votec/" + commentid + "/"
-    vote_any(commentid, newVal, "c", handler)
+    vote_any(commentid, newVal, "c", handler, canVote)
 }

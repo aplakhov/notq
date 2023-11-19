@@ -79,6 +79,7 @@ def one_post(id):
         cupvoted, cdownvoted = get_user_votes_for_comments(g.user['id'], id)
     else:
         upvoted = downvoted = []
+        cupvoted = cdownvoted = []
     return render_template('blog/one_post.html', posts=posts, 
                             upvoted=upvoted, downvoted=downvoted,
                             cupvoted=cupvoted, cdownvoted=cdownvoted)

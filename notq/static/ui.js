@@ -5,3 +5,7 @@ function toggle(id) {
     else
         thing.style.display = "none"
 }
+
+function flash(before, message) {
+    before.insertAdjacentHTML('beforebegin', '<div class="flash">' + message + '</div>');
+}
