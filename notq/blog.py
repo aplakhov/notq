@@ -152,7 +152,10 @@ def about():
                 db.commit()
             return redirect(url_for('blog.userpage', username=g.user['username']))
 
-    return render_template('blog/about.html', post=get_about_post(g.user['username']))
+    username = None
+    if g.user:
+        username = g.user['username']
+    return render_template('blog/about.html', post=get_about_post(username))
 
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required

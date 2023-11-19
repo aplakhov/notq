@@ -135,9 +135,9 @@ def get_user_stats(username):
 
 def get_about_post(username):
     db = get_db()
-    if username == g.user['username']:
+    if g.user and username == g.user['username']:
         about_post_id = g.user['about_post_id']
-    else:
+    elif username:
         userdata = db.execute(
             'SELECT about_post_id FROM user WHERE username = ?', (username,)
         ).fetchone()
