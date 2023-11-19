@@ -1,6 +1,12 @@
-  </header><header id="bestmenu"{% if not besturl %} style="display:none"{% endif %}>
-  <a class="navlink" {%if besturl == '/best/day' %} style="color:black" {% else %} href="/best/day"{% endif %}>день</a>
-  <a class="navlink" {%if besturl == '/best/week' %} style="color:black" {% else %} href="/best/week"{% endif %}>неделя</a>
-  <a class="navlink" {%if besturl == '/best/month' %} style="color:black" {% else %} href="/best/month"{% endif %}>месяц</a>
-  <a class="navlink" {%if besturl == '/best/year' %} style="color:black" {% else %} href="/best/year"{% endif %}>год</a>
-  <a class="navlink" {%if besturl == '/best/all' %} style="color:black" {% else %} href="/best/all"{% endif %}>вечное</a>
+</header><header id="bestmenu"{% if not besturl %} style="display:none"{% endif %}>
+<a class="navlink" {% if besturl == '/best/day' %} style="color:black" {% else %} href="/best/day"{% endif %}>день</a>
+<a class="navlink" {% if besturl == '/best/week' %} style="color:black" {% else %} href="/best/week"{% endif %}>неделя</a>
+<a class="navlink" {% if besturl == '/best/month' %} style="color:black" {% else %} href="/best/month"{% endif %}>месяц</a>
+<a class="navlink" {% if besturl == '/best/year' %} style="color:black" {% else %} href="/best/year"{% endif %}>год</a>
+<a class="navlink" {% if besturl == '/best/all' %} style="color:black" {% else %} href="/best/all"{% endif %}>вечное</a>
+{% if besturl %}
+</header><header>
+<a class="navlink" {% if not besttype %}style="color:black"{% else %}href="{{besturl}}"{% endif %}>посты</a>
+<a class="navlink" {% if besttype == "users" %}style="color:black"{% else %}href="{{besturl}}/users"{% endif %}>пользователи</a>
+<a class="navlink" {% if besttype == "comments" %}style="color:black"{% else %}href="{{besturl}}/comments"{% endif %}>комментарии</a>
+{% endif %}

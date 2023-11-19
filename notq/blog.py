@@ -28,6 +28,20 @@ def new():
         upvoted = downvoted = []
     return render_template('blog/new.html', posts=posts, upvoted=upvoted, downvoted=downvoted)
 
+def best_title(period):
+    if period == "day":
+        return 'за день'
+    elif period == "week":
+        return 'за неделю'
+    elif period == "month":
+        return 'за месяц'
+    elif period == "year":
+        return 'за год'
+    elif period == "all":
+        return 'за всё время'
+    else:
+        abort(404, f"Unknown time period {period}")
+
 @bp.route('/best/<period>')
 def best(period):
     posts = get_best_posts(period)
@@ -35,21 +49,28 @@ def best(period):
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
     else:
         upvoted = downvoted = []
-    if period == "day":
-        title = 'Лучшее за день'
-    elif period == "week":
-        title = 'Лучшее за неделю'
-    elif period == "month":
-        title = 'Лучшее за месяц'
-    elif period == "year":
-        title = 'Лучшее за год'
-    else:
-        title = 'Лучшее за всё время'
+    title = 'Лучшие записи ' + best_title(period)
     return render_template('blog/best.html', 
                            besturl=url_for('blog.best', period=period), 
                            posts=posts, 
                            upvoted=upvoted, 
                            downvoted=downvoted,
+                           best_title=title)
+
+@bp.route('/best/<period>/users')
+def best_users(period):
+    title = 'Лучшие пользователи ' + best_title(period)
+    return render_template('blog/best_users.html',
+                           besturl=url_for('blog.best', period=period),
+                           besttype='users',
+                           best_title=title)
+
+@bp.route('/best/<period>/comments')
+def best_comments(period):
+    title = 'Лучшие комментарии ' + best_title(period)
+    return render_template('blog/best_comments.html',
+                           besturl=url_for('blog.best', period=period),
+                           besttype='comments',
                            best_title=title)
 
 @bp.route('/u/<username>')
