@@ -64,7 +64,7 @@ def userpage(username):
         abort(404, f"User {username} doesn't exist.") 
     user = {
         'created': created,
-        'karma': 8,
+        'karma': get_user_karma(username),
         'nposts': nposts,
         'ncomments': ncomments,
         'about': get_about_post(username)['rendered']

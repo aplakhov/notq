@@ -163,6 +163,23 @@ def get_user_stats(username):
         return None, 0, 0
     return userdata['created'].strftime('%d-%m-%Y'), user_posts['n'], user_comments['n']
 
+@cache.memoize(timeout=30)
+def get_user_karma(username):
+    db = get_db()
+    posts = db.execute(
+        'SELECT SUM(v.vote) AS votes'
+        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' JOIN vote v ON v.post_id = p.id'
+        ' WHERE username == ?', (username,)
+    ).fetchone()
+    comments = db.execute(
+        'SELECT SUM(v.vote) AS votes'
+        ' FROM comment c JOIN user u ON c.author_id = u.id'
+        ' JOIN commentvote v ON v.comment_id = c.id'
+        ' WHERE username == ?', (username,)
+    ).fetchone()
+    return posts['votes'] + comments['votes'] // 3
+
 def get_about_post(username):
     db = get_db()
     if g.user and username == g.user['username']:
