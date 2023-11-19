@@ -26,7 +26,14 @@ def userpage(username):
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
     else:
         upvoted = downvoted = []
-    return render_template('blog/userpage.html', username=username, posts=posts, upvoted=upvoted, downvoted=downvoted)
+    user = {
+        'created': '16.11.2023',
+        'karma': 8,
+        'nposts': 3,
+        'ncomments': 18,
+        'about': get_about_post()['rendered']
+    }
+    return render_template('blog/userpage.html', name=username, posts=posts, upvoted=upvoted, downvoted=downvoted, user=user)
 
 @bp.route('/<int:id>')
 def one_post(id):
@@ -97,6 +104,53 @@ def get_post_to_update(id, check_author=True):
         abort(403)
 
     return post
+
+def get_about_post():
+    if g.user['about_post_id']:
+        return get_db().execute(
+            'SELECT * FROM post WHERE id = ?',
+            (g.user['about_post_id'], )
+        ).fetchone()
+    else:
+        default_about = 'Этот пользователь пока ничего о себе не написал'
+        return { 'body': default_about, 'rendered': default_about }
+
+@bp.route('/about', methods=('GET', 'POST'))
+@login_required
+def about():
+    if request.method == 'POST':
+        title = "🕮 О себе"
+        body = request.form['body']
+        error = check_post(title, body)
+
+        if error is not None:
+            flash(error)
+        else:
+            rendered = make_html(body)
+            author_id = g.user['id']
+            db = get_db()
+            if not g.user['about_post_id']:
+                # create a new post
+                db.execute(
+                    'INSERT INTO post (title, body, rendered, author_id, show_in_feed)'
+                    ' VALUES (?, ?, ?, ?, ?)',
+                    (title, body, rendered, author_id, False)
+                )
+                # set this post as an "about" post
+                post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
+                if post:
+                    db.execute(
+                        'UPDATE user SET about_post_id = ? WHERE id = ?',
+                        (post['id'], g.user['id'])
+                    )
+                    db.commit()
+            else:
+                # update an old post
+                db.execute('UPDATE post SET body = ?, rendered = ? WHERE id = ?', (body, rendered, g.user['about_post_id']))
+                db.commit()
+            return redirect(url_for('blog.userpage', username=g.user['username']))
+
+    return render_template('blog/about.html', post=get_about_post())
 
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required

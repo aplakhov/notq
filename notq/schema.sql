@@ -24,6 +24,8 @@ CREATE TABLE post (
   FOREIGN KEY (author_id) REFERENCES user (id)
 );
 
+ALTER TABLE user ADD COLUMN about_post_id INT REFERENCES post(id);
+
 CREATE TABLE vote (
   user_id INTEGER NOT NULL,
   post_id INTEGER NOT NULL,

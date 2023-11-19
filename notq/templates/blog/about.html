@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Написать о себе{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <textarea name="body" id="body">{{ request.form['body'] or post['body'] }}</textarea>
+    <input type="submit" value="Отправить">
+  </form>
+  <hr>
+{% endblock %}

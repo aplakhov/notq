@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ username }}{% endblock %}
+{% block title %}{{ name }}{% endblock %}
 
 {% block header %}
   <a class="navlink" href="/">главная</a>
@@ -16,6 +16,31 @@
 {% endblock %}
 
 {% block content %}
+  <article class="post">
+    <header>
+      <div class="middle"><h1 class="bigusername">{{ name }}</h1></div>
+    </header>
+    {% if g.user and g.user['username'] == name %}
+    это вы (<a href="/auth/logout">разлогиниться</a>)
+    {% endif %}
+    <p class="body">С нами с <strong>{{ user['created' ]}}</strong><br/>
+    Карма: <strong>{{ user['karma']}}</strong><br/>
+    Постов: <strong>{{ user['nposts'] }}</strong><br/>
+    Комментариев: <strong>{{ user['ncomments'] }}</strong></p>
+  </article>
+  <hr>
+
+  <article class="post">
+    <header>
+      <div class="middle"><h1>🕮 О себе</h1></div>
+      {% if g.user and g.user['username'] == name %}
+      <a class="action" href="{{ url_for('blog.about') }}" title="Отредактировать">✎</a>
+      {% endif %}
+    </header>
+    <p class="body">{{user['about']|safe}}</p>
+  </article>
+  <hr>
+
   {% for post in posts %}
     {% include 'blog/post_content.html' %}
     <a href="{{ url_for('blog.one_post', id=post['id']) + '#sendanswer' }}">{{post['ncomments']}}</a>
