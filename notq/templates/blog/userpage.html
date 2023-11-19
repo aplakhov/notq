@@ -7,12 +7,7 @@
   <a class="navlink" href="/new">новое</a>
   <a class="navlink" href="javascript:toggle('bestmenu')">лучшее</a>
   {% if g.user %}<a class="navlink" href="{{ url_for('blog.create') }}">написать</a>{% endif %}
-  </header><header id="bestmenu" style="display:none">
-  <a class="navlink" href="/best/day">день</a>
-  <a class="navlink" href="/best/week">неделя</a>
-  <a class="navlink" href="/best/month">месяц</a>
-  <a class="navlink" href="/best/year">год</a>
-  <a class="navlink" href="/best/all">за всё время</a>
+  {% include 'blog/bestmenu.html' %}
 {% endblock %}
 
 {% block content %}
