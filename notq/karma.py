@@ -18,7 +18,9 @@ def get_user_karma(username):
         ' JOIN commentvote v ON v.comment_id = c.id'
         ' WHERE username == ?', (username,)
     ).fetchone()
-    return posts['votes'] + comments['votes'] // 3
+    pv = posts['votes'] or 0
+    cv = comments['votes'] or 0
+    return pv + cv // 3
 
 @cache.memoize(timeout=60)
 def get_best_users(period):
