@@ -58,10 +58,23 @@ def best(period):
                            downvoted=downvoted,
                            best_title=title)
 
+def add_current_user(users, all_users):
+    if not g.user:
+        return
+    for u in users:
+        if g.user['username'] == u[1]:
+            return
+    for n in range(len(all_users)):
+        if all_users[n][0] == g.user['username']:
+            users.append((n+1, all_users[n][0], all_users[n][1]))
+            return
+
 @bp.route('/best/<period>/users')
 def best_users(period):
     title = 'Лучшие пользователи ' + best_title(period)
-    users = get_best_users(period)
+    all_users = get_best_users(period)
+    users = [(n+1, all_users[n][0], all_users[n][1]) for n in range(min(50, len(all_users)))]
+    add_current_user(users)
     return render_template('blog/best_users.html',
                            besturl=url_for('blog.best', period=period),
                            besttype='users',
