@@ -196,9 +196,9 @@ def about():
             if not g.user['about_post_id']:
                 # create a new post
                 db.execute(
-                    'INSERT INTO post (title, body, rendered, author_id, show_in_feed)'
-                    ' VALUES (?, ?, ?, ?, ?)',
-                    (title, body, rendered, author_id, False)
+                    'INSERT INTO post (title, body, rendered, author_id)'
+                    ' VALUES (?, ?, ?, ?)',
+                    (title, body, rendered, author_id)
                 )
                 # set this post as an "about" post
                 post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()

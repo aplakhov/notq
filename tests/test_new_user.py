@@ -1,15 +1,39 @@
-def test_new_user(client):
+def register_and_login(client, username, password):
     assert client.get('/auth/register').status_code == 200
     response = client.post(
-        '/auth/register', data={'username': 'abc', 'password': 'a'}
+        '/auth/register', data={'username': username, 'password': password}
     )
     assert response.headers["Location"] == "/auth/login"
 
     response = client.post(
-        '/auth/login', data={'username': 'abc', 'password': 'a'}
+        '/auth/login', data={'username': username, 'password': password}
     )
     assert response.headers["Location"] == "/"
-    
-    response = client.get('/u/abc')
-    assert('abc'.encode() in response.data)
+
+def assert_default_self_page(client, username):
+    response = client.get('/u/' + username)
+    assert(username.encode() in response.data)
     assert('Этот пользователь пока ничего о себе не написал'.encode() in response.data)
+
+def assert_nondefault_self_page(client, username, text):
+    response = client.get('/u/' + username)
+    assert(username.encode() in response.data)
+    assert(text.encode() in response.data)
+
+def test_new_user(client):
+    register_and_login(client, "abc", "a")
+    assert_default_self_page(client, "abc")
+
+def test_two_new_users(client):
+    register_and_login(client, "abc", "a")
+    client.get('/auth/logout')
+    
+    register_and_login(client, "def", "a")
+    
+    assert_default_self_page(client, "abc")
+    assert_default_self_page(client, "def")
+    
+    assert client.get('/about').status_code == 200
+    client.post('/about', data={'body': 'hello world'})
+    assert_nondefault_self_page(client, "def", "hello world")
+    assert_default_self_page(client, "abc")
