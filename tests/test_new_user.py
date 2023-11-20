@@ -37,3 +37,16 @@ def test_two_new_users(client):
     client.post('/about', data={'body': 'hello world'})
     assert_nondefault_self_page(client, "def", "hello world")
     assert_default_self_page(client, "abc")
+
+def check_all_pages(client):
+    assert client.get('/').status_code == 200
+    assert client.get('/u/some_unknown_user').status_code == 404
+    assert client.get('/new').status_code == 200
+    assert client.get('/best/day').status_code == 200
+    assert client.get('/best/day/users').status_code == 200
+    assert client.get('/best/day/comments').status_code == 200
+
+def test_empty_service(client):
+    check_all_pages(client)
+    register_and_login(client, "abc", "a")
+    check_all_pages(client)
