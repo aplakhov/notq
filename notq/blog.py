@@ -74,7 +74,7 @@ def best_users(period):
     title = 'Лучшие пользователи ' + best_title(period)
     all_users = get_best_users(period)
     users = [(n+1, all_users[n][0], all_users[n][1]) for n in range(min(50, len(all_users)))]
-    add_current_user(users)
+    add_current_user(users, all_users)
     return render_template('blog/best_users.html',
                            besturl=url_for('blog.best', period=period),
                            besttype='users',
