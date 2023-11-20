@@ -21,6 +21,12 @@ def check_page_contains(client, url, what):
     assert response.status_code == 200
     assert(what.encode() in response.data)
 
+def check_page_contains_several(client, url, fragments):
+    response = client.get(url)
+    assert response.status_code == 200
+    for what in fragments:
+        assert(what.encode() in response.data)
+
 def test_new_user(client):
     register_and_login(client, 'abc', 'a')
     assert_default_self_page(client, 'abc')
@@ -57,3 +63,14 @@ def test_logout(client):
     client.get('/auth/logout')
     check_page_contains(client, '/', 'Войти')
     assert_default_self_page(client, 'abc')
+
+def test_first_post_self_upvote(client):
+    register_and_login(client, 'abc', 'a')
+    check_page_contains(client, '/create', 'Написать')
+    title = 'Пост'
+    body = 'А теперь о погоде'
+    client.post('/create', data={'title':title, 'body':body})
+    fragments = [title, body, '<div id="nv1">1</div>']
+    check_page_contains_several(client, '/', fragments + ['style="color: #00a000"'])
+    client.get('/auth/logout')
+    check_page_contains_several(client, '/', fragments)
