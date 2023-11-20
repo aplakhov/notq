@@ -43,4 +43,6 @@ def get_best_users(period):
     ).fetchall()
     for c in comments:
         userkarma[c['username']] += c['votes'] / 3
+    for u in userkarma:
+        userkarma[u] = int(userkarma[u])
     return sorted(userkarma.items(), key = lambda kv: kv[1], reverse=True)

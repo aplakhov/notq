@@ -65,7 +65,7 @@ def best_users(period):
     return render_template('blog/best_users.html',
                            besturl=url_for('blog.best', period=period),
                            besttype='users',
-                           users=str(users),
+                           users=users,
                            best_title=title)
 
 @bp.route('/best/<period>/comments')

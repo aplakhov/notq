@@ -11,8 +11,22 @@
 {% endblock %}
 
 {% block content %}
-  <div class="flash">Not implemented yet</div>
   <article class="post">
-    {{users}}
-  </article>
+    <table class="topusers">
+      <thead><tr>
+      <th style="width:10%"><h1>#</h1></th>
+      <th><h1>Имя</h1></th>
+      <th style="width:30%"><h1 title="Карма или типа того">▲</h1></th>
+      </tr></thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+        <td style="text-align:center">{{ loop.index }}.</td>
+        <td>{% set username=user[0] %}{% include 'user.html' %}</a>
+        <td style="text-align:center">{{user[1]}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+    </article>
 {% endblock %}
