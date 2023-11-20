@@ -4,6 +4,9 @@ version = "0.0.1"
 description = "Atushka/Yachan/LiveJournal/Reddit hybrid."
 dependencies = [
     "flask",
+    "markdown",
+    "html-sanitizer",
+    "Flask-Caching"
 ]
 
 [build-system]
