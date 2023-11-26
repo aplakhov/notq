@@ -13,6 +13,8 @@ CREATE TABLE user (
   is_golden BOOLEAN
 );
 
+INSERT INTO user (username, password) VALUES ('Anonymous', '.');
+
 CREATE TABLE post (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   author_id INTEGER NOT NULL,
@@ -30,6 +32,8 @@ CREATE TABLE vote (
   user_id INTEGER NOT NULL,
   post_id INTEGER NOT NULL,
   vote INTEGER NOT NULL,
+  weighted_vote INTEGER NOT NULL,
+  karma_vote REAL NOT NULL,
   FOREIGN KEY (user_id) REFERENCES user (id),
   FOREIGN KEY (post_id) REFERENCES post (id),
   UNIQUE (user_id, post_id)
@@ -52,6 +56,8 @@ CREATE TABLE commentvote (
   post_id INTEGER NOT NULL,
   comment_id INTEGER NOT NULL,
   vote INTEGER NOT NULL,
+  weighted_vote INTEGER NOT NULL,
+  karma_vote REAL NOT NULL, 
   FOREIGN KEY (user_id) REFERENCES user (id),
   FOREIGN KEY (post_id) REFERENCES post (id),
   FOREIGN KEY (comment_id) REFERENCES comment (id),

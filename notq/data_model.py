@@ -70,16 +70,17 @@ def top_post_scoring(post, now):
     halflife = 18 * 3600
     timediff = (now - post['created']).total_seconds()
     decay = halflife / (halflife + timediff)
-    return (post['votes'] + 4) * decay
+    return (post['weighted_votes'] + 4) * decay
 
 def best_post_scoring(post):
-    return post['votes']
+    return post['weighted_votes']
 
 @cache.cached(timeout=10)
 def get_top_posts():
     db = get_db()
     all_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
+        'SELECT p.id, title, rendered, p.created, author_id, username,'
+        ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' GROUP BY p.id'
@@ -125,7 +126,8 @@ def get_best_posts(period):
     start = get_starting_date(period)
     db = get_db()
     period_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
+        'SELECT p.id, title, rendered, p.created, author_id, username,'
+        ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' WHERE p.created > ?'
@@ -264,6 +266,41 @@ def add_comment(text, rendered, author_id, post_id, parent_id):
         (text, rendered, author_id, post_id, parent_id)
     )
     db.commit()
+
+def vote_values(voteparam, is_golden_user):
+    vote = voteparam - 1
+    if is_golden_user:
+        weighted_vote = 42 * vote
+        karma_vote = 7 * vote
+    else:
+        weighted_vote = karma_vote = vote
+    if karma_vote < 0:
+        karma_vote = karma_vote / 2
+    return vote, weighted_vote, karma_vote
+
+def add_vote(user_id, is_golden_user, post_id, voteparam):
+    if voteparam == 0 or voteparam == 1 or voteparam == 2:
+        vote, weighted_vote, karma_vote = vote_values(voteparam, is_golden_user)
+        db = get_db()
+        db.execute(
+            'INSERT INTO vote(user_id,post_id,vote,weighted_vote,karma_vote) VALUES(?,?,?,?,?) '
+            'ON CONFLICT(user_id,post_id) DO UPDATE '
+            'SET vote=excluded.vote,weighted_vote=excluded.weighted_vote,karma_vote=excluded.karma_vote',
+            (user_id, post_id, vote, weighted_vote, karma_vote)
+        )
+        db.commit()
+
+def add_comment_vote(user_id, is_golden_user, post_id, comment_id, voteparam):
+    if voteparam == 0 or voteparam == 1 or voteparam == 2:
+        vote, weighted_vote, karma_vote = vote_values(voteparam, is_golden_user)
+        db = get_db()
+        db.execute(
+            'INSERT INTO commentvote(user_id,post_id,comment_id,vote,weighted_vote,karma_vote) VALUES(?,?,?,?,?,?)'
+            'ON CONFLICT(user_id,post_id,comment_id) DO UPDATE '
+            'SET vote=excluded.vote,weighted_vote=excluded.weighted_vote,karma_vote=excluded.karma_vote',
+            (user_id, post_id, comment_id, vote, weighted_vote, karma_vote)
+        )
+        db.commit()
 
 @cache.memoize(timeout=10)
 def get_posts_by_id(id):
