@@ -151,7 +151,7 @@ def create():
             # upvote just created post
             post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
             if post:
-                add_vote(author_id, g.user['is_golden_user'], post['id'], 2)
+                add_vote(author_id, g.user['is_golden'], post['id'], 2)
                 return redirect(url_for('blog.one_post', id=post['id']))
             else:
                 return redirect(url_for('blog.index'))
@@ -250,13 +250,13 @@ def delete(id):
 @bp.route('/<int:id>/vote/<int:vote>', methods=('POST',))
 @login_required
 def vote(post_id, voteparam):
-    add_vote(g.user['id'], g.user['is_golden_user'], post_id, voteparam)
+    add_vote(g.user['id'], g.user['is_golden'], post_id, voteparam)
     return "1"
 
 @bp.route('/<int:post_id>/votec/<int:comment_id>/<int:vote>', methods=('POST',))
 @login_required
 def voteс(post_id, comment_id, voteparam):
-    add_comment_vote(g.user['id'], g.user['is_golden_user'], post_id, comment_id, voteparam)
+    add_comment_vote(g.user['id'], g.user['is_golden'], post_id, comment_id, voteparam)
     return "1"
 
 def check_comment(thing, text):
@@ -292,6 +292,6 @@ def addcomment():
         db = get_db()
         comment = db.execute('SELECT id FROM comment WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
         if comment:
-            add_comment_vote(author_id, g.user['is_golden_user'], post_id, comment['id'], 2)
+            add_comment_vote(author_id, g.user['is_golden'], post_id, comment['id'], 2)
             anchor = "#answer" + str(comment['id'])
         return redirect(url_for('blog.one_post', id=post_id) + anchor)
