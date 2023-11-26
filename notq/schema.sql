@@ -10,7 +10,7 @@ CREATE TABLE user (
   password TEXT NOT NULL,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   about TEXT,
-  is_golden BOOLEAN
+  is_golden BOOLEAN NOT NULL DEFAULT 0
 );
 
 INSERT INTO user (username, password) VALUES ('Anonymous', '.');
