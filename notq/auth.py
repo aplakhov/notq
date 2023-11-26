@@ -55,13 +55,15 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        db = get_db()
-        error = None
-        user = db.execute(
-            'SELECT * FROM user WHERE username = ?', (username,)
-        ).fetchone()
 
-        error = (user is None) or (not check_password_hash(user['password'], password))
+        if username == "Anonymous":
+            error = True
+        else:
+            db = get_db()
+            user = db.execute(
+                'SELECT * FROM user WHERE username = ?', (username,)
+            ).fetchone()
+            error = (user is None) or (not check_password_hash(user['password'], password))
 
         if not error:
             session.clear()
