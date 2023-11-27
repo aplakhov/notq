@@ -247,13 +247,13 @@ def delete(id):
     db.commit()
     return redirect(url_for('blog.index'))
 
-@bp.route('/<int:id>/vote/<int:vote>', methods=('POST',))
+@bp.route('/<int:post_id>/vote/<int:voteparam>', methods=('POST',))
 @login_required
 def vote(post_id, voteparam):
     add_vote(g.user['id'], g.user['is_golden'], post_id, voteparam)
     return "1"
 
-@bp.route('/<int:post_id>/votec/<int:comment_id>/<int:vote>', methods=('POST',))
+@bp.route('/<int:post_id>/votec/<int:comment_id>/<int:voteparam>', methods=('POST',))
 @login_required
 def voteс(post_id, comment_id, voteparam):
     add_comment_vote(g.user['id'], g.user['is_golden'], post_id, comment_id, voteparam)

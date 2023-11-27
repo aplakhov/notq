@@ -10,6 +10,23 @@ from notq.db import get_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
+def do_login(username, password):
+    if username == "Anonymous":
+        error = True
+    else:
+        db = get_db()
+        user = db.execute(
+            'SELECT * FROM user WHERE username = ?', (username,)
+        ).fetchone()
+        error = (user is None) or (not check_password_hash(user['password'], password))
+
+    if not error:
+        session.clear()
+        session['user_id'] = user['id']
+        return redirect(url_for('index'))
+
+    flash('Неверное имя пользователя или пароль. Возможно, вы имели в виду "correct horse battery staple"?')
+
 usernamere = re.compile("^[A-Za-z0-9-]+$")
 def check_username(username):
     return usernamere.match(username)
@@ -44,7 +61,7 @@ def register():
             except db.IntegrityError:
                 error = f"User {username} is already registered."
             else:
-                return redirect(url_for("auth.login"))
+                return do_login(username, password)
 
         flash(error)
 
@@ -55,23 +72,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-
-        if username == "Anonymous":
-            error = True
-        else:
-            db = get_db()
-            user = db.execute(
-                'SELECT * FROM user WHERE username = ?', (username,)
-            ).fetchone()
-            error = (user is None) or (not check_password_hash(user['password'], password))
-
-        if not error:
-            session.clear()
-            session['user_id'] = user['id']
-            return redirect(url_for('index'))
-
-        flash('Неверное имя пользователя или пароль. Возможно, вы имели в виду "correct horse battery staple"?')
-
+        return do_login(username, password)
     return render_template('auth/login.html')
 
 @bp.before_app_request

@@ -3,11 +3,6 @@ def register_and_login(client, username, password):
     response = client.post(
         '/auth/register', data={'username': username, 'password': password}
     )
-    assert response.headers["Location"] == "/auth/login"
-
-    response = client.post(
-        '/auth/login', data={'username': username, 'password': password}
-    )
     assert response.headers["Location"] == "/"
 
 def assert_default_self_page(client, username):
@@ -74,3 +69,16 @@ def test_first_post_self_upvote(client):
     check_page_contains_several(client, '/', fragments + ['style="color: #00a000"'])
     client.get('/auth/logout')
     check_page_contains_several(client, '/', fragments)
+
+def test_two_votes(client):
+    register_and_login(client, 'abc', 'a')
+    check_page_contains(client, '/create', 'Написать')
+    title = 'Some post'
+    body = 'Need upvotes'
+    client.post('/create', data={'title':title, 'body':body})
+
+    register_and_login(client, 'def', 'a')
+    client.post('/1/vote/2')
+
+    fragments = [title, body, '<div id="nv1">2</div>']
+    check_page_contains_several(client, '/', fragments + ['style="color: #00a000"'])
