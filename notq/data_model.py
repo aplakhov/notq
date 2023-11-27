@@ -135,7 +135,9 @@ def get_best_posts(period):
     ).fetchall()
     ncomments = get_posts_comments_number()
     return [
-        post_from_sql_row(p, ncomments, False) for p in nlargest(100, period_posts, key=lambda post: best_post_scoring(post))
+        post_from_sql_row(p, ncomments, False) 
+        for p in nlargest(100, period_posts, key=lambda post: best_post_scoring(post))
+        if p['weighted_votes'] >= 0
     ]
 
 @cache.cached(timeout=60)
