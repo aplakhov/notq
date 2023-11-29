@@ -29,17 +29,7 @@
           <small style="color:gray">{{ comment['created' ]}}</small>
         </summary>
         {{comment['rendered']|safe}}
-        <small>
-          <details>
-            <summary><span class="inlineaction">ответить</span></summary>
-            <form method="post" action="addcomment">
-              <input type="hidden" name="thing" value="{{ post['id'] }}">
-              <input type="hidden" name="parent" value="{{ comment['id'] }}">
-              <textarea name="text"></textarea>
-              <input type="submit" value="Отправить">
-            </form>
-          </details>
-        </small>
+        <small><a class="inlineaction" href="#" onclick="javascript:addanswermenu(this,{{ post['id'] }},{{ comment['id'] }})">ответить</a></small>        
         {% if comment.children -%}
             <ul>{{ loop(comment.children) }}</ul>
         {% endif %}

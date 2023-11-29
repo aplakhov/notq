@@ -19,12 +19,10 @@ function addanswermenu(after, post, comment) {
       <input type="submit" name="send" value="Ответить"/>
       <input type="button" onclick="toggle('moar${comment}')" value="..."/>
       <div id='moar${comment}' style="display:none">
-		<details style="margin-left: 8px; margin-bottom:2em"><summary style="color:gray; list-style:revert; font-size:small">подсказка по синтаксису</summary>
-		<ul><p><strong>notq использует расширенный markdown.</strong> *курсив*, **жирный шрифт** и т.п.</p></details>
         <label for="authorship">Подпись</label>
         <div>
             <input style="margin-top:8px" type="radio" id="thisuser" name="authorship" value="thisuser" checked />
-            <label for="thisuser">finder</label>
+            <label for="thisuser">от своего имени</label>
         </div>
         <div>
           <input type="radio" id="anon" name="authorship" value="anon"/>
@@ -34,8 +32,23 @@ function addanswermenu(after, post, comment) {
           <input type="radio" id="paranoid" name="authorship" value="paranoid"/>
           <label for="paranoid">совершенно анонимно</label>
         </div>
-        <div> <input type="checkbox" id="newpost" style="margin-right:8px"/><label for="newpost"/>отдельным постом</input>
+        <div>
+          <input type="checkbox" name="newpost">
+          <label for="newpost"/>отдельным постом</input>
+        </div>
       </div>
+      <details style="margin-left: 8px; margin-bottom:2em"><summary style="color:gray; list-style:revert; font-size:small">форматирование текста</summary>
+        <p>notq использует <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a> с некоторыми расширенными возможностями</p>
+        <table><thead><tr><th>Вы вводите</th><th>Что получается</th></tr></thead>
+        <tr><td>*курсив*</td><td><em>курсив</em></td></tr>
+        <tr><td>**жирный шрифт**</td><td><strong>жирный шрифт</strong></td></tr>
+        <tr><td>[Пример ссылки](http://example.net)</td><td><a href="http://example.net">Пример ссылки</a></td></tr>
+        <tr><td>/u/username</td><td><a class="username" href="/u/username"><img src="/static/silver.png"/>username</a></td></tr>
+        <tr><td>> цитата</td><td><strong><blockquote>цитата</blockquote></td></tr>
+        <tr><td>* пункт 1<br/>* пункт 2</td><td><ul><li>пункт 1</li><li>пункт 2</li></ul></td></tr>
+        <tr><td>ссылка на YouTube (на отдельной строке)</td><td>видеоплеер</td></tr>
+        </table>
+      </details>
     </form>
     `
     after.insertAdjacentHTML('afterend', answermenu)
