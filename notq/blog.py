@@ -293,6 +293,23 @@ def voteс(post_id, comment_id, voteparam):
     add_comment_vote(g.user['id'], g.user['is_golden'], post_id, comment_id, voteparam)
     return "1"
 
+def check_user_permissions_to_comment(db):
+    now = datetime.now()
+
+    # 1. is temporarily banned
+    if g.user['banned_until'] and g.user['banned_until'] > now:
+        return "Вы временно лишены слова и не можете комментировать до " + g.user['banned_until'].strftime('%d-%m-%Y %H:%M')
+    
+    # 2. comments too often
+    since = now - timedelta(minutes=5)
+    count = db.execute('SELECT COUNT(*) AS n FROM comment WHERE author_id = ? AND created > ?', (g.user['id'], since)).fetchone()
+    if count and count['n'] >= 20:
+        return "Вы оставляете комментарии слишком часто. Подождите несколько минут."
+    if count and count['n'] >= 5 and not g.user['is_golden'] and get_user_karma(g.user['username']) < 100:
+        return "Вы оставляете комментарии слишком часто. Подождите несколько минут."
+
+    return None
+
 def check_comment(post_id, text):
     if not post_id:
         return 'Что-то сломалось или вы делаете что-то странное'
@@ -314,7 +331,10 @@ def addcomment():
     anon = 'authorship' in request.form and request.form['authorship'] == 'anon'
     paranoid = 'authorship' in request.form and request.form['authorship'] == 'paranoid'
 
-    error = check_comment(post_id, text)
+    db = get_db()
+    error = check_user_permissions_to_comment(db)
+    if not error:
+        error = check_comment(post_id, text)
 
     if error is not None:
         flash(error)
@@ -332,7 +352,6 @@ def addcomment():
 
         # upvote just created comment
         if not paranoid:
-            db = get_db()
             comment = db.execute('SELECT id FROM comment WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
             if comment:
                 add_comment_vote(author_id, g.user['is_golden'], post_id, comment['id'], 2)
