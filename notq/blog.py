@@ -273,10 +273,12 @@ def check_comment(thing, text):
 @bp.route('/addcomment', methods=('POST',))
 @login_required
 def addcomment():
-    post_id = request.form['thing']
+    post_id = request.form['parentpost']
     text = request.form['text']
     if 'parent' in request.form:
-        parent_id = request.form['parent']
+        parent_id = request.form['parentcomment']
+        if parent_id <= 0:
+            parent_id = None
     else:
         parent_id = None
     error = check_comment(post_id, text)

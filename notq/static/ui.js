@@ -13,8 +13,8 @@ function flash(before, message) {
 function addanswermenu(after, post, comment) {
     const answermenu=`
     <form method="post" action="addcomment" style="display:block">
-      <input type="hidden" name="thing" value="${comment}">
-      <input type="hidden" name="parent" value="${post}">
+      <input type="hidden" name="parentcomment" value="${comment}">
+      <input type="hidden" name="parentpost" value="${post}">
       <textarea name="text" style="width:100%"></textarea><br/>
       <input type="submit" name="send" value="Ответить"/>
       <input type="button" onclick="toggle('moar${comment}')" value="..."/>

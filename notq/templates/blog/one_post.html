@@ -13,12 +13,14 @@
 {% block content %}
   {% for post in posts %}
     {% include 'blog/post_content.html' %}
-    <form method="post" action="addcomment" id="sendanswer">
-        <label for="text">Ответить</label>
-        <input type="hidden" name="thing" value="{{ post['id'] }}">
-        <textarea name="text"></textarea>
-        <input type="submit" value="Отправить">
-    </form>
+    <span class="sendanswer"></span>
+    <script>
+        function ready() {
+            var where = document.getElementsByClassName('sendanswer');
+            addanswermenu(where[0], {{post['id']}}, 0)
+        }
+        document.addEventListener("DOMContentLoaded", ready)
+    </script>
     {% for comment in post['comments'] recursive %}
       <details {% if not comment['closed'] %}open="1"{% endif %} id="answer{{ comment['id'] }}">
         <summary class="{% if g.user and g.user['id'] == comment['author_id'] %}thiscommentheader{% else %}commentheader{% endif %}">
