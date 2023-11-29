@@ -263,8 +263,8 @@ def voteс(post_id, comment_id, voteparam):
     add_comment_vote(g.user['id'], g.user['is_golden'], post_id, comment_id, voteparam)
     return "1"
 
-def check_comment(thing, text):
-    if not thing:
+def check_comment(post_id, text):
+    if not post_id:
         return 'Что-то сломалось или вы делаете что-то странное'
     if not text:
         return 'Нужно что-нибудь написать'
@@ -281,6 +281,9 @@ def addcomment():
             parent_id = None
     else:
         parent_id = None
+    anon = 'authorship' in request.form and request.form['authorship'] == 'anon'
+    paranoid = 'authorship' in request.form and request.form['authorship'] == 'paranoid'
+
     error = check_comment(post_id, text)
 
     if error is not None:
@@ -288,16 +291,20 @@ def addcomment():
     else:
         rendered = make_html(text)
         author_id = g.user['id']
-        add_comment(text, rendered, author_id, post_id, parent_id)
+        if paranoid:
+            author_id = 1 # Anonymous
+            anon = True
+        add_comment(text, rendered, author_id, post_id, parent_id, anon)
         if parent_id:
             anchor = "#answer" + str(parent_id)
         else:
             anchor = "#sendanswer"
 
         # upvote just created comment
-        db = get_db()
-        comment = db.execute('SELECT id FROM comment WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
-        if comment:
-            add_comment_vote(author_id, g.user['is_golden'], post_id, comment['id'], 2)
-            anchor = "#answer" + str(comment['id'])
+        if not paranoid:
+            db = get_db()
+            comment = db.execute('SELECT id FROM comment WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
+            if comment:
+                add_comment_vote(author_id, g.user['is_golden'], post_id, comment['id'], 2)
+                anchor = "#answer" + str(comment['id'])
         return redirect(url_for('blog.one_post', id=post_id) + anchor)

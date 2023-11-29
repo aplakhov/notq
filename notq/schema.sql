@@ -23,6 +23,7 @@ CREATE TABLE post (
   title TEXT NOT NULL,
   body TEXT NOT NULL,
   rendered TEXT NOT NULL,
+  anon BOOLEAN,
   FOREIGN KEY (author_id) REFERENCES user (id)
 );
 
@@ -47,6 +48,7 @@ CREATE TABLE comment (
   rendered TEXT NOT NULL,
   post_id INTEGER NOT NULL,
   parent_id INTEGER,
+  anon BOOLEAN,
   FOREIGN KEY (author_id) REFERENCES user (id),
   FOREIGN KEY(post_id) REFERENCES post (id)
 );

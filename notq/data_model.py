@@ -198,6 +198,9 @@ def comment_from_data(c, commentvotes):
         'parent_id': c['parent_id'],
         'username': c['username']
     }
+    if c['anon']:
+        res['author_id'] = 1
+        res['username'] = 'Anonymous'
     if c['id'] in commentvotes:
         res['votes'] = commentvotes[c['id']]
     else:
@@ -227,7 +230,7 @@ def get_post_comments(post_id):
     # collect comments
     db = get_db()
     comments = db.execute(
-        'SELECT c.id, author_id, c.created, rendered, parent_id, username'
+        'SELECT c.id, author_id, c.created, rendered, parent_id, username, anon'
         ' FROM comment c JOIN user u ON c.author_id = u.id'
         ' WHERE post_id = ? ORDER BY c.id', (post_id,)
     ).fetchall()
@@ -260,12 +263,12 @@ def get_post_comments_likes(post_id):
     res = { v['comment_id'] : v['votes'] for v in votes }
     return res
 
-def add_comment(text, rendered, author_id, post_id, parent_id):
+def add_comment(text, rendered, author_id, post_id, parent_id, anon):
     db = get_db()
     db.execute(
-        'INSERT INTO comment (body, rendered, author_id, post_id, parent_id)'
-        ' VALUES (?, ?, ?, ?, ?)',
-        (text, rendered, author_id, post_id, parent_id)
+        'INSERT INTO comment (body, rendered, author_id, post_id, parent_id, anon)'
+        ' VALUES (?, ?, ?, ?, ?, ?)',
+        (text, rendered, author_id, post_id, parent_id, anon)
     )
     db.commit()
 
