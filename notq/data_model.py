@@ -205,9 +205,11 @@ def comment_from_data(c, commentvotes):
         res['author_id'] = 1
         res['username'] = 'Anonymous'
     if c['id'] in commentvotes:
-        res['votes'] = commentvotes[c['id']]
+        res['votes'] = commentvotes[c['id']]['votes']
+        res['weighted'] = commentvotes[c['id']]['weighted']
     else:
         res['votes'] = 0
+        res['weighted'] = 0
     return res
 
 @cache.memoize(timeout=9)
@@ -221,7 +223,7 @@ def get_user_votes_for_posts(user_id):
     return upvoted, downvoted
 
 def sort_comments_tree(comments):
-    comments.sort(key=lambda c: c['votes'], reverse=True)
+    comments.sort(key=lambda c: c['weighted'], reverse=True)
     for c in comments:
         if c['votes'] < -4:
             c['closed'] = True
@@ -260,10 +262,10 @@ def get_post_comments(post_id):
 def get_post_comments_likes(post_id):
     db = get_db()
     votes = db.execute(
-        'SELECT comment_id, SUM(vote) AS votes FROM commentvote '
+        'SELECT comment_id, SUM(vote) AS votes, SUM(weighted_vote) AS weighted FROM commentvote '
         'WHERE post_id = ? GROUP BY comment_id', (post_id,)
     ).fetchall()
-    res = { v['comment_id'] : v['votes'] for v in votes }
+    res = { v['comment_id'] : { 'votes': v['votes'], 'weighted': v['weighted'] } for v in votes }
     return res
 
 def add_comment(text, rendered, author_id, post_id, parent_id, anon):

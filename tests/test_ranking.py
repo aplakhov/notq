@@ -40,3 +40,34 @@ def test_posts_ranking(client):
 
     time_ordered = ['post4', 'content4', 'post3', 'content3', 'post2', 'content2', 'post1', 'content1']
     check_page_contains_ordered(client, '/new', time_ordered)
+
+def test_comments_ranking(client):
+    register_and_login(client, 'abc', 'a')
+    make_post(client, 'post1', 'content1')
+
+    register_and_login(client, 'def', 'a')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment1'})
+    time.sleep(1)
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':'comment2'})
+    time.sleep(1)
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3'})
+    time.sleep(1)
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment4'})
+    time.sleep(1)
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment5'})
+    # novote on comment1, downvote comment3
+    client.post('/1/votec/1/1')
+    client.post('/1/votec/3/0')
+
+    register_and_login(client, 'ghi', 'a')
+    # upvote comment 4
+    client.post('/1/votec/4/2')
+
+    ordered = ['post1', 'content1', 
+                'comment4', # 2 votes
+                'comment5', # 1 vote
+                'comment1', # 0 votes
+                'comment2', # goes after comment1
+                'comment3'  # -1 vote
+            ]
+    check_page_contains_ordered(client, '/1', ordered)
