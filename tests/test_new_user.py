@@ -1,26 +1,10 @@
-def register_and_login(client, username, password):
-    assert client.get('/auth/register').status_code == 200
-    response = client.post(
-        '/auth/register', data={'username': username, 'password': password}
-    )
-    assert response.headers["Location"] == "/"
+from tests.util import *
 
 def assert_default_self_page(client, username):
     response = client.get('/u/' + username)
     assert response.status_code == 200
     assert(username.encode() in response.data)
     assert('Этот пользователь пока ничего о себе не написал'.encode() in response.data)
-
-def check_page_contains(client, url, what):
-    response = client.get(url)
-    assert response.status_code == 200
-    assert(what.encode() in response.data)
-
-def check_page_contains_several(client, url, fragments):
-    response = client.get(url)
-    assert response.status_code == 200
-    for what in fragments:
-        assert(what.encode() in response.data)
 
 def test_new_user(client):
     register_and_login(client, 'abc', 'a')
@@ -61,10 +45,9 @@ def test_logout(client):
 
 def test_first_post_self_upvote(client):
     register_and_login(client, 'abc', 'a')
-    check_page_contains(client, '/create', 'Написать')
     title = 'Пост'
     body = 'А теперь о погоде'
-    client.post('/create', data={'title':title, 'body':body})
+    make_post(client, title, body)
     fragments = [title, body, '<div id="nv1">1</div>']
     check_page_contains_several(client, '/', fragments + ['style="color: #00a000"'])
     client.get('/auth/logout')
@@ -72,10 +55,9 @@ def test_first_post_self_upvote(client):
 
 def test_two_votes(client):
     register_and_login(client, 'abc', 'a')
-    check_page_contains(client, '/create', 'Написать')
     title = 'Some post'
     body = 'Need upvotes'
-    client.post('/create', data={'title':title, 'body':body})
+    make_post(client, title, body)
 
     register_and_login(client, 'def', 'a')
     client.post('/1/vote/2')
