@@ -125,6 +125,23 @@ def one_post(id):
                             upvoted=upvoted, downvoted=downvoted,
                             cupvoted=cupvoted, cdownvoted=cdownvoted)
 
+def check_user_permissions_to_post(db):
+    now = datetime.now()
+
+    # 1. is temporarily banned
+    if g.user['banned_until'] and g.user['banned_until'] > now:
+        return "Вы временно лишены слова и не можете оставлять записи до " + g.user['banned_until'].strftime('%d-%m-%Y %H:%M')
+    
+    # 2. posts too often
+    since = now - timedelta(hours=1)
+    count = db.execute('SELECT COUNT(*) AS n FROM post WHERE author_id = ? AND created > ?', (g.user['id'], since)).fetchone()
+    if count and count['n'] >= 20:
+        return "Вы делаете записи слишком часто. Подождите некоторое время."
+    if count and count['n'] >= 3 and not g.user['is_golden'] and get_user_karma(g.user['username']) < 100:
+        return "Вы делаете записи слишком часто. Подождите некоторое время."
+
+    return None
+
 def check_post(title, body):
     if not title:
         return 'Нужен заголовок'
@@ -140,7 +157,11 @@ def create():
         body = request.form['body']
         anon = 'authorship' in request.form and request.form['authorship'] == 'anon'
         paranoid = 'authorship' in request.form and request.form['authorship'] == 'paranoid'
-        error = check_post(title, body)
+
+        db = get_db()
+        error = check_user_permissions_to_post(db)
+        if error is None:
+            error = check_post(title, body)
 
         if error is not None:
             flash(error)
@@ -151,7 +172,6 @@ def create():
                 author_id = 1 # Anonymous
                 anon = True
 
-            db = get_db()
             db.execute(
                 'INSERT INTO post (title, body, rendered, author_id, anon)'
                 ' VALUES (?, ?, ?, ?, ?)',

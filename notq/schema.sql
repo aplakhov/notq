@@ -10,7 +10,8 @@ CREATE TABLE user (
   password TEXT NOT NULL,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   about TEXT,
-  is_golden BOOLEAN NOT NULL DEFAULT 0
+  is_golden BOOLEAN NOT NULL DEFAULT 0,
+  banned_until TIMESTAMP
 );
 
 INSERT INTO user (username, password) VALUES ('Anonymous', '.');
