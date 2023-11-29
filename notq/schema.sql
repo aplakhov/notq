@@ -24,6 +24,7 @@ CREATE TABLE post (
   body TEXT NOT NULL,
   rendered TEXT NOT NULL,
   anon BOOLEAN,
+  show_in_feed BOOLEAN NOT NULL DEFAULT 1,
   FOREIGN KEY (author_id) REFERENCES user (id)
 );
 CREATE INDEX idx_post_created ON post(created);
