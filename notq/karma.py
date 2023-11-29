@@ -20,7 +20,7 @@ def get_user_karma(username):
     ).fetchone()
     pv = posts['votes'] or 0
     cv = comments['votes'] or 0
-    return pv + cv // 3
+    return int(pv + cv // 3)
 
 @cache.memoize(timeout=60)
 def get_best_users(period):
@@ -35,7 +35,8 @@ def get_best_users(period):
         ' GROUP BY u.id', (start,)
     ).fetchall()
     for p in posts:
-        userkarma[p['username']] += p['votes']
+        if p['id'] != 1: #not anomymous
+            userkarma[p['username']] += p['votes']
     comments = db.execute(
         'SELECT SUM(v.karma_vote) AS votes, u.id, username'
         ' FROM comment c JOIN user u ON c.author_id = u.id'
@@ -44,7 +45,8 @@ def get_best_users(period):
         ' GROUP BY u.id', (start,)
     ).fetchall()
     for c in comments:
-        userkarma[c['username']] += c['votes'] / 3
+        if c['id'] != 1: #not anomymous
+            userkarma[c['username']] += c['votes'] / 3
     for u in userkarma:
         userkarma[u] = int(userkarma[u])
     return sorted(userkarma.items(), key = lambda kv: kv[1], reverse=True)

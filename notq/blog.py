@@ -138,6 +138,8 @@ def create():
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
+        anon = 'authorship' in request.form and request.form['authorship'] == 'anon'
+        paranoid = 'authorship' in request.form and request.form['authorship'] == 'paranoid'
         error = check_post(title, body)
 
         if error is not None:
@@ -145,18 +147,26 @@ def create():
         else:
             rendered = make_html(body)
             author_id = g.user['id']
+            if paranoid:
+                author_id = 1 # Anonymous
+                anon = True
+
             db = get_db()
             db.execute(
-                'INSERT INTO post (title, body, rendered, author_id)'
-                ' VALUES (?, ?, ?, ?)',
-                (title, body, rendered, author_id)
+                'INSERT INTO post (title, body, rendered, author_id, anon)'
+                ' VALUES (?, ?, ?, ?, ?)',
+                (title, body, rendered, author_id, anon)
             )
             db.commit()
             # upvote just created post
             post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
             if post:
-                add_vote(author_id, g.user['is_golden'], post['id'], 2)
-                return redirect(url_for('blog.one_post', id=post['id']))
+                if not paranoid:
+                    add_vote(author_id, g.user['is_golden'], post['id'], 2)
+                    return redirect(url_for('blog.one_post', id=post['id']))
+                else:
+                    add_vote(1, False, post['id'], 1)
+                    return redirect(url_for('blog.new'))
             else:
                 return redirect(url_for('blog.index'))
 

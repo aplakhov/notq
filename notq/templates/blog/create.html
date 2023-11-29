@@ -5,11 +5,38 @@
 {% endblock %}
 
 {% block content %}
-  <form method="post">
+  <form method="post" style="display:block">
     <label for="title">Заголовок</label>
-    <input name="title" id="title" value="{{ request.form['title'] }}" required>
+    <input name="title" style="width:100%" id="title" value="{{ request.form['title'] }}" required>
     <label for="body">Текст</label>
-    <textarea name="body" id="body">{{ request.form['body'] }}</textarea>
+    <textarea name="body" style="width:100%" id="body">{{ request.form['body'] }}</textarea>
     <input type="submit" value="Отправить">
+    <input type="button" onclick="toggle('moar')" value="..."/>
+    <div id='moar' style="display:none">
+      <div>
+          <input style="margin-top:8px" type="radio" id="thisuser" name="authorship" value="thisuser" checked />
+          <label for="thisuser">от своего имени</label>
+      </div>
+      <div>
+        <input type="radio" id="anon" name="authorship" value="anon"/>
+        <label for="anon">анонимно (с получением кармы)</label>
+      </div>
+      <div>
+        <input type="radio" id="paranoid" name="authorship" value="paranoid"/>
+        <label for="paranoid">совершенно анонимно</label>
+      </div>
+    </div>
+    <details style="margin-left: 8px; margin-bottom:2em"><summary style="color:gray; list-style:revert; font-size:small">форматирование текста</summary>
+      <p>notq использует <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a> с некоторыми расширенными возможностями</p>
+      <table><thead><tr><th>Вы вводите</th><th>Что получается</th></tr></thead>
+      <tr><td>*курсив*</td><td><em>курсив</em></td></tr>
+      <tr><td>**жирный шрифт**</td><td><strong>жирный шрифт</strong></td></tr>
+      <tr><td>[Пример ссылки](http://example.net)</td><td><a href="http://example.net">Пример ссылки</a></td></tr>
+      <tr><td>/u/username</td><td><a class="username" href="/u/username"><img src="/static/silver.png"/>username</a></td></tr>
+      <tr><td>> цитата</td><td><strong><blockquote>цитата</blockquote></td></tr>
+      <tr><td>* пункт 1<br/>* пункт 2</td><td><ul><li>пункт 1</li><li>пункт 2</li></ul></td></tr>
+      <tr><td>ссылка на YouTube (на отдельной строке)</td><td>видеоплеер</td></tr>
+      </table>
+    </details>
   </form>
 {% endblock %}

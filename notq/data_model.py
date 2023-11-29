@@ -62,6 +62,9 @@ def post_from_sql_row(p, ncomments, add_comments):
         'votes': p['votes'],
         'ncomments': make_comments_string(nc)
     }
+    if p['anon']:
+        res['author_id'] = 1
+        res['username'] = 'Anonymous'
     if add_comments:
         res['comments'] = get_post_comments(p['id'])
     return res
@@ -79,7 +82,7 @@ def best_post_scoring(post):
 def get_top_posts():
     db = get_db()
     all_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username,'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon,'
         ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
@@ -97,7 +100,7 @@ def get_top_posts():
 def get_new_posts():
     db = get_db()
     new_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' GROUP BY p.id'
@@ -126,7 +129,7 @@ def get_best_posts(period):
     start = get_starting_date(period)
     db = get_db()
     period_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username,'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon,'
         ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
@@ -144,10 +147,10 @@ def get_best_posts(period):
 def get_user_posts(username):
     db = get_db()
     user_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE username == ?'
+        ' WHERE username == ? AND NOT p.anon'
         ' GROUP BY p.id'
         ' ORDER BY p.created DESC', (username,)
     ).fetchall()
@@ -311,7 +314,7 @@ def add_comment_vote(user_id, is_golden_user, post_id, comment_id, voteparam):
 def get_posts_by_id(id):
     db = get_db()
     posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, SUM(v.vote) AS votes'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' WHERE p.id = ?'
