@@ -39,7 +39,7 @@ def test_comment(client):
 
     commenttext = "answer1"
     register_and_login(client, 'def', 'a')
-    client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':commenttext})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':commenttext})
 
     fragments = [title, body, commenttext, 'abc', 'def']
     check_page_contains_several(client, '/1', fragments + ['style="color: #00a000"'])
@@ -54,7 +54,7 @@ def anon_comment_checks(client, type):
 
     commenttext = "answer1"
     register_and_login(client, 'def', 'a')
-    client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':commenttext, 'authorship': type})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':commenttext, 'authorship': type})
 
     fragments = [title, body, commenttext, 'abc', 'Anonymous']
     check_page_contains_several(client, '/1', fragments)

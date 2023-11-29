@@ -285,9 +285,9 @@ def check_comment(post_id, text):
 def addcomment():
     post_id = request.form['parentpost']
     text = request.form['text']
-    if 'parent' in request.form:
+    if 'parentcomment' in request.form:
         parent_id = request.form['parentcomment']
-        if parent_id <= 0:
+        if int(parent_id) <= 0:
             parent_id = None
     else:
         parent_id = None
