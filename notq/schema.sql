@@ -29,6 +29,7 @@ CREATE TABLE post (
   FOREIGN KEY (author_id) REFERENCES user (id)
 );
 CREATE INDEX idx_post_created ON post(created);
+CREATE INDEX idx_post_author ON post(author_id);
 
 ALTER TABLE user ADD COLUMN about_post_id INT REFERENCES post(id);
 
@@ -56,6 +57,7 @@ CREATE TABLE comment (
   FOREIGN KEY(post_id) REFERENCES post (id)
 );
 CREATE INDEX idx_comment_post ON comment(post_id);
+CREATE INDEX idx_comment_author ON comment(author_id);
 
 CREATE TABLE commentvote (
   user_id INTEGER NOT NULL,
