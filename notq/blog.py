@@ -137,7 +137,7 @@ def check_user_permissions_to_post(db):
     count = db.execute('SELECT COUNT(*) AS n FROM post WHERE author_id = ? AND created > ?', (g.user['id'], since)).fetchone()
     if count and count['n'] >= 20:
         return "Вы делаете записи слишком часто. Подождите некоторое время."
-    if count and count['n'] >= 3 and not g.user['is_golden'] and get_user_karma(g.user['username']) < 100:
+    if count and count['n'] >= 4 and not g.user['is_golden'] and get_user_karma(g.user['username']) < 100:
         return "Вы делаете записи слишком часто. Подождите некоторое время."
 
     return None
