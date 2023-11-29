@@ -26,6 +26,7 @@ CREATE TABLE post (
   anon BOOLEAN,
   FOREIGN KEY (author_id) REFERENCES user (id)
 );
+CREATE INDEX idx_post_created ON post(created);
 
 ALTER TABLE user ADD COLUMN about_post_id INT REFERENCES post(id);
 
@@ -52,6 +53,7 @@ CREATE TABLE comment (
   FOREIGN KEY (author_id) REFERENCES user (id),
   FOREIGN KEY(post_id) REFERENCES post (id)
 );
+CREATE INDEX idx_comment_post ON comment(post_id);
 
 CREATE TABLE commentvote (
   user_id INTEGER NOT NULL,
@@ -65,3 +67,4 @@ CREATE TABLE commentvote (
   FOREIGN KEY (comment_id) REFERENCES comment (id),
   UNIQUE (user_id, post_id, comment_id)
 );
+CREATE INDEX idx_commentvote_post ON commentvote(post_id);
