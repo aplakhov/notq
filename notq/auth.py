@@ -26,6 +26,7 @@ def do_login(username, password):
         return redirect(url_for('index'))
 
     flash('Неверное имя пользователя или пароль. Возможно, вы имели в виду "correct horse battery staple"?')
+    return redirect(url_for('auth.login'))
 
 usernamere = re.compile("^[A-Za-z0-9-]+$")
 def check_username(username):
