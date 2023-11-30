@@ -17,7 +17,7 @@
     <script>
         function ready() {
             var where = document.getElementsByClassName('sendanswer');
-            addanswermenu(where[0], {{post['id']}}, 0)
+            addanswermenu(where[0], {{post['id']}}, 0, {{g.canVote}})
         }
         document.addEventListener("DOMContentLoaded", ready)
     </script>
@@ -31,7 +31,7 @@
           <small style="color:gray">{{ comment['created' ]}}</small>
         </summary>
         {{comment['rendered']|safe}}
-        <small><a class="inlineaction" href="#" onclick="javascript:addanswermenu(this,{{ post['id'] }},{{ comment['id'] }})">ответить</a></small>        
+        <small><a class="inlineaction" href="#" onclick="javascript:addanswermenu(this,{{ post['id'] }},{{ comment['id'] }},{{g.canVote}})">ответить</a></small>        
         {% if comment.children -%}
             <ul>{{ loop(comment.children) }}</ul>
         {% endif %}

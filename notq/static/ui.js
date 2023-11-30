@@ -10,7 +10,7 @@ function flash(before, message) {
     before.insertAdjacentHTML('beforebegin', '<div class="flash">' + message + '</div>');
 }
 
-function addanswermenu(after, post, comment) {
+function addanswermenu(after, post, comment, cancomment) {
     const answermenu=`
     <form method="post" action="addcomment" style="display:block">
       <input type="hidden" name="parentcomment" value="${comment}">
@@ -51,7 +51,10 @@ function addanswermenu(after, post, comment) {
       </details>
     </form>
     `
-    after.insertAdjacentHTML('afterend', answermenu)
+    if (cancomment)
+      after.insertAdjacentHTML('afterend', answermenu)
+    else
+      flash(after, "Чтобы оставлять комментарии, <a href='/auth/register'>зарегистрируйтесь</a>")
     after.style.display = "none"
     event.preventDefault()
 }
