@@ -194,7 +194,7 @@ def create():
 
 def get_post_to_update(id):
     post = get_db().execute(
-        'SELECT p.id, title, body, p.created, author_id, username'
+        'SELECT p.id, title, body, p.created, author_id, username, edited_by_moderator'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' WHERE p.id = ?',
         (id,)
@@ -203,7 +203,10 @@ def get_post_to_update(id):
     if post is None:
         abort(404, f"Post id {id} doesn't exist.")
 
-    if post['author_id'] != g.user['id']:
+    if post['edited_by_moderator'] and not g.user['is_moderator']:
+        abort(403)
+
+    if post['author_id'] != g.user['id'] and not g.user['is_moderator']:
         abort(403)
 
     return post
@@ -248,6 +251,9 @@ def about():
         username = g.user['username']
     return render_template('blog/about.html', post=get_about_post(username))
 
+def is_moderator_edit(what):
+    return what['author_id'] != g.user['id'] and g.user['is_moderator']
+
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required
 def update(id):
@@ -262,10 +268,12 @@ def update(id):
             flash(error)
         else:
             rendered = make_html(body)
+            if is_moderator_edit(post):
+                rendered = "<p class='moderated'>Отредактировано модератором</p>" + rendered
             db = get_db()
             db.execute(
-                'UPDATE post SET title = ?, body = ?, rendered = ? WHERE id = ?',
-                (title, body, rendered, id)
+                'UPDATE post SET title = ?, body = ?, rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
+                (title, body, rendered, id, datetime.now(), is_moderator_edit(post))
             )
             db.commit()
             return redirect(url_for('blog.one_post', id=id))

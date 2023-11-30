@@ -11,6 +11,7 @@ CREATE TABLE user (
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   about TEXT,
   is_golden BOOLEAN NOT NULL DEFAULT 0,
+  is_moderator BOOLEAN NOT NULL DEFAULT 0,
   banned_until TIMESTAMP
 );
 
@@ -26,6 +27,7 @@ CREATE TABLE post (
   rendered TEXT NOT NULL,
   anon BOOLEAN,
   show_in_feed BOOLEAN NOT NULL DEFAULT 1,
+  edited_by_moderator BOOLEAN,
   FOREIGN KEY (author_id) REFERENCES user (id)
 );
 CREATE INDEX idx_post_created ON post(created);

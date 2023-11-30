@@ -23,6 +23,7 @@ nav ul li a, nav ul li span { display: block; padding: 0.5rem; color: white; }
 .post > header > .middle { flex: auto; }
 .post > header h1 { font-size: 1.5em; margin-bottom: 0; line-height: initial; }
 .post .about { color: slategray; font-style: italic; }
+.moderated { background-color: #fff0f0 }
 .content:last-child { margin-bottom: 0; }
 .content form { margin: 1em 0; display: flex; flex-direction: column; }
 .content label { font-weight: bold; margin-bottom: 0.5em; }
