@@ -145,6 +145,8 @@ def check_user_permissions_to_post(db):
 def check_post(title, body):
     if not title:
         return 'Нужен заголовок'
+    if len(title) > 150:
+        return 'Слишком длинный заголовок, уложитесь в 150 символов'
     if not body:
         return 'Нужно что-нибудь написать'
     return None
