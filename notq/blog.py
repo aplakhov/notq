@@ -352,7 +352,7 @@ def addcomment():
         flash(error)
         return redirect(url_for('blog.one_post', id=post_id))
     else:
-        rendered = make_html(text)
+        rendered = make_html(text, do_embeds=False)
         author_id = g.user['id']
         if paranoid:
             author_id = 1 # Anonymous

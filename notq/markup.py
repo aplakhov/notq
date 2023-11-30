@@ -22,8 +22,9 @@ youtubere = re.compile(r"<p>(\s)*https://(youtu.be/|www.youtube.com/watch\?v=)(?
 def resolveYoutubeEmbeds(html):
     return youtubere.sub(r'<iframe class="youtube" width="560" src="https://www.youtube.com/embed/\g<id>" frameborder="0" allowfullscreen></iframe>', html)
 
-def make_html(text):
+def make_html(text, do_embeds = True):
     html = markdown.markdown(text, )
     html = sanitizeHtml(html)
-    html = resolveYoutubeEmbeds(html)
+    if do_embeds:
+        html = resolveYoutubeEmbeds(html)
     return html

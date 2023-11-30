@@ -46,7 +46,6 @@ function addanswermenu(after, post, comment, cancomment) {
         <tr><td>/u/username</td><td><a class="username" href="/u/username"><img src="/static/silver.png"/>username</a></td></tr>
         <tr><td>> цитата</td><td><strong><blockquote>цитата</blockquote></td></tr>
         <tr><td>* пункт 1<br/>* пункт 2</td><td><ul><li>пункт 1</li><li>пункт 2</li></ul></td></tr>
-        <tr><td>ссылка на YouTube (на отдельной строке)</td><td>видеоплеер</td></tr>
         </table>
       </details>
     </form>
