@@ -315,6 +315,8 @@ def check_comment(post_id, text):
         return 'Что-то сломалось или вы делаете что-то странное'
     if not text:
         return 'Нужно что-нибудь написать'
+    if len(text) > 5000:
+        return 'Вы попытались оставить слишком длинный комментарий'
     return None
 
 @bp.route('/addcomment', methods=('POST',))
@@ -338,6 +340,7 @@ def addcomment():
 
     if error is not None:
         flash(error)
+        return redirect(url_for('blog.one_post', id=post_id))
     else:
         rendered = make_html(text)
         author_id = g.user['id']
