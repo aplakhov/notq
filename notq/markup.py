@@ -18,13 +18,18 @@ def sanitizeHtml(value):
     sanitizer = Sanitizer(sanitizerConfig)
     return sanitizer.sanitize(value)
 
-youtubere = re.compile(r"<p>(\s)*https://(youtu.be/|www.youtube.com/watch\?v=)(?P<id>[0-9a-zA-Z_]*)(\S)*(\s)*</p>")
+usernamere = re.compile(r"[^a-zA-Z0-9]/u/(?P<name>[a-zA-Z0-9-]+)")
+def resolveUsernames(html):
+    return usernamere.sub(r'<a class="username" href="/u/\g<name>"><img src="/static/silver.png">\g<name></a>', html)
+
+youtubere = re.compile(r"<p>(\s)*https://(youtu.be/|www.youtube.com/watch\?v=)(?P<id>[0-9a-zA-Z_]+)(\S)*(\s)*</p>")
 def resolveYoutubeEmbeds(html):
     return youtubere.sub(r'<iframe class="youtube" width="560" src="https://www.youtube.com/embed/\g<id>" frameborder="0" allowfullscreen></iframe>', html)
 
 def make_html(text, do_embeds = True):
     html = markdown.markdown(text, )
     html = sanitizeHtml(html)
+    html = resolveUsernames(html)
     if do_embeds:
         html = resolveYoutubeEmbeds(html)
     return html

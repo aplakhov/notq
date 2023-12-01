@@ -19,3 +19,15 @@ def test_quote():
 def test_pre():
     html = make_html("    print('Hello world')")
     assert('<pre>' in html and "print('Hello world')" in html)
+
+def check_username(src):
+    html = make_html(src)
+    assert('<a class="username" href="/u/finder"><img src="/static/silver.png">finder</a>' in html)
+
+def test_usernames():
+    check_username('/u/finder')
+    check_username('(/u/finder)')
+    check_username('а также /u/finder и др.')
+    check_username('Привет.\n/u/finder как-то сказал')
+    html = make_html('https://reddit.com/u/finder')
+    assert(not 'silver.png' in html)
