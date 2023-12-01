@@ -33,7 +33,7 @@
         {{comment['rendered']|safe}}
         <small><a class="inlineaction" href="#" onclick="javascript:addanswermenu(this,{{ post['id'] }},{{ comment['id'] }},{{g.canVote}})">ответить</a></small>        
         {% if comment.children -%}
-            <ul>{{ loop(comment.children) }}</ul>
+            <ul style="margin-top:12px">{{ loop(comment.children) }}</ul>
         {% endif %}
       </details>
     {% endfor %}

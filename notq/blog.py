@@ -88,10 +88,17 @@ def best_users(period):
 @bp.route('/best/<period>/comments')
 def best_comments(period):
     title = 'Лучшие комментарии ' + best_title(period)
+    comments = get_best_comments(period)
+    if g.user:
+        cupvoted, cdownvoted = get_user_votes_for_all_comments(g.user['id'])
+    else:
+        cupvoted = cdownvoted = []
     return render_template('blog/best_comments.html',
                            besturl=url_for('blog.best', period=period),
                            besttype='comments',
-                           best_title=title)
+                           comments=comments,
+                           best_title=title,
+                           cupvoted=cupvoted, cdownvoted=cdownvoted)
 
 @bp.route('/u/<username>')
 def userpage(username):

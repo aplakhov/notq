@@ -193,7 +193,7 @@ def get_about_post(username):
         default_about = 'Этот пользователь пока ничего о себе не написал'
         return { 'body': default_about, 'rendered': default_about }
 
-def comment_from_data(c, commentvotes):
+def comment_from_data(c, commentvotes, do_parent_post=False):
     res = {
         'id': c['id'],
         'author_id': c['author_id'],
@@ -205,13 +205,41 @@ def comment_from_data(c, commentvotes):
     if c['anon']:
         res['author_id'] = 1
         res['username'] = 'Anonymous'
-    if c['id'] in commentvotes:
-        res['votes'] = commentvotes[c['id']]['votes']
-        res['weighted'] = commentvotes[c['id']]['weighted']
+    if commentvotes:
+        if c['id'] in commentvotes:
+            res['votes'] = commentvotes[c['id']]['votes']
+            res['weighted'] = commentvotes[c['id']]['weighted']
+        else:
+            res['votes'] = 0
+            res['weighted'] = 0
     else:
-        res['votes'] = 0
-        res['weighted'] = 0
+        res['votes'] = c['votes']
+        res['weighted'] = c['weighted']
+    if do_parent_post:
+        res['post_id'] = c['post_id']
+        res['title'] = c['title']
     return res
+
+@cache.memoize(timeout=60)
+def get_best_comments(period):
+    start = get_starting_date(period)
+    db = get_db()
+    comments_data = db.execute(
+        '''
+        SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon,
+           u.username, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
+        FROM comment c
+        JOIN user u ON c.author_id = u.id
+        JOIN post p ON c.post_id = p.id
+        JOIN commentvote v ON v.comment_id = c.id
+        WHERE c.created > ?
+        GROUP BY comment_id
+        HAVING SUM(v.vote) > 0
+        ORDER BY weighted DESC
+        LIMIT 100
+        ''', (start,)
+    ).fetchall()
+    return [comment_from_data(c, None, True) for c in comments_data]
 
 @cache.memoize(timeout=9)
 def get_user_votes_for_posts(user_id):
@@ -325,6 +353,11 @@ def get_posts_by_id(id):
     ).fetchall()
     return [post_from_sql_row(p, None, True) for p in posts]
 
+def upvoted_downvoted(votes):
+    upvoted = [v['comment_id'] for v in votes if v['vote'] > 0]
+    downvoted = [v['comment_id'] for v in votes if v['vote'] < 0]
+    return upvoted, downvoted
+
 @cache.memoize(timeout=10)
 def get_user_votes_for_comments(user_id, post_id):
     db = get_db()
@@ -332,6 +365,14 @@ def get_user_votes_for_comments(user_id, post_id):
         'SELECT comment_id, vote FROM commentvote '
         'WHERE post_id = ? AND user_id = ?', (post_id, user_id)
     ).fetchall()
-    upvoted = [v['comment_id'] for v in votes if v['vote'] > 0]
-    downvoted = [v['comment_id'] for v in votes if v['vote'] < 0]
-    return upvoted, downvoted
+    return upvoted_downvoted(votes)
+
+@cache.memoize(timeout=60)
+def get_user_votes_for_all_comments(user_id):
+    # this should probably be optimized somehow?
+    db = get_db()
+    votes = db.execute(
+        'SELECT comment_id, vote FROM commentvote '
+        'WHERE user_id = ?', (user_id,)
+    ).fetchall()
+    return upvoted_downvoted(votes)
