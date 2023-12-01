@@ -118,7 +118,13 @@ def userpage(username):
         'banned': banned_until,
         'about': get_about_post(username)['rendered'],
     }
-    return render_template('blog/userpage.html', name=username, posts=posts, upvoted=upvoted, downvoted=downvoted, user=user)
+    if g.user and g.user['is_moderator']:
+        comments = get_last_user_comments(username)
+    else:
+        comments = None
+    return render_template('blog/userpage.html', user=user, name=username,
+                           posts=posts, comments=comments,
+                           upvoted=upvoted, downvoted=downvoted)
 
 
 @bp.route('/u/<username>/ban/<period>')
@@ -144,6 +150,7 @@ def ban_user(username, period):
     flash("User " + username + " was banned until " + until.strftime('%d-%m-%Y %H:%M'))
     return redirect(url_for('blog.userpage', username=username))
 
+
 @bp.route('/u/<username>/unban')
 def unban_user(username):
     if not g.user or not g.user['is_moderator']:
@@ -158,6 +165,7 @@ def unban_user(username):
 
     flash("User " + username + " was unbanned")
     return redirect(url_for('blog.userpage', username=username))
+
 
 @bp.route('/<int:id>')
 def one_post(id):

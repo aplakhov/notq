@@ -42,6 +42,14 @@
     {% endif %}
   </article>
   <hr>
+  
+  {% if g.user and g.user['is_moderator'] and g.user['username'] != name and comments %}
+  <article class="post">
+    <h1>Последние комментарии пользователя</h1><p class="body"></p>
+  </article>
+    {% include 'blog/flatcomments.html' %}
+  <hr>
+  {% endif %}
 
   <article class="post">
     <header>

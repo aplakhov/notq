@@ -244,6 +244,24 @@ def get_best_comments(period):
     ).fetchall()
     return [comment_from_data(c, None, True) for c in comments_data]
 
+def get_last_user_comments(username):
+    db = get_db()
+    comments_data = db.execute(
+        '''
+        SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon,
+           u.username, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
+        FROM comment c
+        JOIN user u ON c.author_id = u.id
+        JOIN post p ON c.post_id = p.id
+        JOIN commentvote v ON v.comment_id = c.id
+        WHERE u.username == ?
+        GROUP BY comment_id
+        ORDER BY c.created DESC
+        LIMIT 20
+        ''', (username,)
+    ).fetchall()
+    return [comment_from_data(c, None, True) for c in comments_data]
+
 @cache.memoize(timeout=9)
 def get_user_votes_for_posts(user_id):
     db = get_db()
