@@ -18,7 +18,7 @@ def sanitizeHtml(value):
     sanitizer = Sanitizer(sanitizerConfig)
     return sanitizer.sanitize(value)
 
-youtubere = re.compile(r"<p>(\s)*https://(youtu.be/|www.youtube.com/watch\?v=)(?P<id>(\S)*)(\s)*</p>")
+youtubere = re.compile(r"<p>(\s)*https://(youtu.be/|www.youtube.com/watch\?v=)(?P<id>[0-9a-zA-Z_]*)(\S)*(\s)*</p>")
 def resolveYoutubeEmbeds(html):
     return youtubere.sub(r'<iframe class="youtube" width="560" src="https://www.youtube.com/embed/\g<id>" frameborder="0" allowfullscreen></iframe>', html)
 
