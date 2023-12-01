@@ -158,6 +158,20 @@ def get_user_posts(username):
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in user_posts]
 
+def get_anon_posts():
+    db = get_db()
+    anon_posts = db.execute(
+        'SELECT p.id, title, rendered, p.created, "1" AS author_id, "Anonymous" AS username, p.anon,'
+        ' p.edited_by_moderator, SUM(v.vote) AS votes'
+        ' FROM post p'
+        ' JOIN vote v ON v.post_id = p.id'
+        ' WHERE p.anon'
+        ' GROUP BY p.id'
+        ' ORDER BY p.created DESC'
+    ).fetchall()
+    ncomments = get_posts_comments_number()
+    return [post_from_sql_row(p, ncomments, False) for p in anon_posts]
+
 def get_user_stats(username):
     db = get_db()
     user_posts = db.execute(
@@ -254,7 +268,7 @@ def get_last_user_comments(username):
         JOIN user u ON c.author_id = u.id
         JOIN post p ON c.post_id = p.id
         JOIN commentvote v ON v.comment_id = c.id
-        WHERE u.username == ?
+        WHERE u.username == ? AND NOT c.anon
         GROUP BY comment_id
         ORDER BY c.created DESC
         LIMIT 20

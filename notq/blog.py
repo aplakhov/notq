@@ -102,7 +102,10 @@ def best_comments(period):
 
 @bp.route('/u/<username>')
 def userpage(username):
-    posts = get_user_posts(username)
+    if username == "Anonymous" and g.user and g.user['is_moderator']:
+        posts = get_anon_posts()
+    else:
+        posts = get_user_posts(username)
     if g.user:
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
     else:
