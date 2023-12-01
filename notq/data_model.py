@@ -205,7 +205,7 @@ def comment_from_data(c, commentvotes, do_parent_post=False):
     if c['anon']:
         res['author_id'] = 1
         res['username'] = 'Anonymous'
-    if commentvotes:
+    if commentvotes is not None:
         if c['id'] in commentvotes:
             res['votes'] = commentvotes[c['id']]['votes']
             res['weighted'] = commentvotes[c['id']]['weighted']
