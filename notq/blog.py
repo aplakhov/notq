@@ -333,7 +333,7 @@ def update(id):
             db = get_db()
             db.execute(
                 'UPDATE post SET title = ?, body = ?, rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
-                (title, body, rendered, id, datetime.now(), is_moderator_edit(post))
+                (title, body, rendered, datetime.now(), is_moderator_edit(post), id)
             )
             db.commit()
             return redirect(url_for('blog.one_post', id=id))
