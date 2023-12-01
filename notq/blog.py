@@ -107,7 +107,7 @@ def userpage(username):
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
     else:
         upvoted = downvoted = []
-    created, nposts, ncomments = get_user_stats(username)
+    created, nposts, ncomments, banned_until = get_user_stats(username)
     if not created:
         abort(404, f"User {username} doesn't exist.") 
     user = {
@@ -115,9 +115,49 @@ def userpage(username):
         'karma': get_user_karma(username),
         'nposts': nposts,
         'ncomments': ncomments,
-        'about': get_about_post(username)['rendered']
+        'banned': banned_until,
+        'about': get_about_post(username)['rendered'],
     }
     return render_template('blog/userpage.html', name=username, posts=posts, upvoted=upvoted, downvoted=downvoted, user=user)
+
+
+@bp.route('/u/<username>/ban/<period>')
+def ban_user(username, period):
+    if not g.user or not g.user['is_moderator']:
+        abort(403)
+    if period == "day":
+        until = datetime.now() + timedelta(days=1)
+    elif period == "week":
+        until = datetime.now() + timedelta(days=7)
+    elif period == "all":
+        until = datetime.now() + timedelta(days=99000)
+    else:
+        abort(404)
+
+    db = get_db()
+    db.execute(
+                'UPDATE user SET banned_until = ? WHERE username = ?',
+                (until, username)
+            )
+    db.commit()
+
+    flash("User " + username + " was banned until " + until.strftime('%d-%m-%Y %H:%M'))
+    return redirect(url_for('blog.userpage', username=username))
+
+@bp.route('/u/<username>/unban')
+def unban_user(username):
+    if not g.user or not g.user['is_moderator']:
+        abort(403)
+
+    db = get_db()
+    db.execute(
+                'UPDATE user SET banned_until = ? WHERE username = ?',
+                (None, username)
+            )
+    db.commit()
+
+    flash("User " + username + " was unbanned")
+    return redirect(url_for('blog.userpage', username=username))
 
 @bp.route('/<int:id>')
 def one_post(id):

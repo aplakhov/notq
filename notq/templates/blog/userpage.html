@@ -22,6 +22,24 @@
     Карма: <strong>{{ user['karma']}}</strong><br/>
     Постов: <strong>{{ user['nposts'] }}</strong><br/>
     Комментариев: <strong>{{ user['ncomments'] }}</strong></p>
+    {% if user['banned'] %}
+    <p class='moderated'>Лишен слова до {{user['banned']}}</p>
+    {% endif %}
+    {% if g.user and g.user['is_moderator'] and g.user['username'] != name %}
+    {% if not user['banned'] %}
+    <a onclick="return confirm('Забанить на день?')" href="/u/{{name}}/ban/day">Забанить на день</a>
+    |
+    <a onclick="return confirm('Забанить на неделю?')" href="/u/{{name}}/ban/week">Забанить на неделю</a>
+    |
+    <a onclick="return confirm('Забанить навсегда?')" href="/u/{{name}}/ban/all">Забанить навсегда</a>
+    {% else %}
+    <a onclick="return confirm('Разбанить?')" href="/u/{{name}}/unban">Разбанить</a>
+    {% endif %}
+    |
+    <a onclick="return confirm('Удалить сегодняшние комментарии?')" href="/u/{{name}}/delete/day">Удалить комментарии за день</a>
+    |
+    <a onclick="return confirm('Удалить ВСЁ (только для очевидного спама)?')" href="/u/{{name}}/ban/week">УДАЛИТЬ ПОЛНОСТЬЮ</a>
+    {% endif %}
   </article>
   <hr>
 

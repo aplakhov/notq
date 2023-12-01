@@ -158,7 +158,6 @@ def get_user_posts(username):
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in user_posts]
 
-@cache.memoize(timeout=30)
 def get_user_stats(username):
     db = get_db()
     user_posts = db.execute(
@@ -171,8 +170,12 @@ def get_user_stats(username):
     ).fetchone()
     userdata = db.execute('SELECT * FROM user WHERE username ==?', (username,)).fetchone()
     if userdata is None:
-        return None, 0, 0
-    return userdata['created'].strftime('%d-%m-%Y'), user_posts['n'], user_comments['n']
+        return None, 0, 0, None
+    if userdata['banned_until'] and userdata['banned_until'] > datetime.now():
+        banned = userdata['banned_until'].strftime('%d-%m-%Y')
+    else:
+        banned = None
+    return userdata['created'].strftime('%d-%m-%Y'), user_posts['n'], user_comments['n'], banned
 
 def get_about_post(username):
     db = get_db()
