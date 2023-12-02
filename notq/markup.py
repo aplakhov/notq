@@ -1,5 +1,6 @@
 import re
 import markdown
+from markdown.extensions.wikilinks import WikiLinkExtension
 from html_sanitizer import Sanitizer
 
 sanitizerConfig = {
@@ -26,10 +27,21 @@ youtubere = re.compile(r"<p>(\s)*https://(youtu.be/|www.youtube.com/watch\?v=)(?
 def resolveYoutubeEmbeds(html):
     return youtubere.sub(r'<iframe class="youtube" width="560" src="https://www.youtube.com/embed/\g<id>" frameborder="0" allowfullscreen></iframe>', html)
 
+def ruenwiki_link_builder(label, base, end):
+    if re.search('[а-яА-Я]', label):
+        return "https://ru.wikipedia.org/wiki/" + label
+    else:
+        return "https://en.wikipedia.org/wiki/" + label
+
 def make_html(text, do_embeds = True):
-    html = markdown.markdown(text, )
+    html = markdown.markdown(text, extensions=[
+        WikiLinkExtension(build_url=ruenwiki_link_builder),
+    ])
     html = sanitizeHtml(html)
     html = resolveUsernames(html)
     if do_embeds:
         html = resolveYoutubeEmbeds(html)
     return html
+
+html = make_html('[[Москва]], [[London]]')
+print(html)

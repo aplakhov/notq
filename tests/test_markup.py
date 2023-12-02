@@ -31,3 +31,8 @@ def test_usernames():
     check_username('Привет.\n/u/finder как-то сказал')
     html = make_html('https://reddit.com/u/finder')
     assert(not 'silver.png' in html)
+
+def test_wikilinks():
+    html = make_html('[[Москва]], [[London]]')
+    expected = r'<a href="https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0">Москва</a>, <a href="https://en.wikipedia.org/wiki/London">London</a>'
+    assert(expected in html)
