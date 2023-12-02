@@ -6,7 +6,8 @@ dependencies = [
     "flask",
     "markdown",
     "html-sanitizer",
-    "Flask-Caching"
+    "Flask-Caching",
+    "Pygments"
 ]
 
 [build-system]

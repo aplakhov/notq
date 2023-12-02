@@ -6,11 +6,12 @@ from html_sanitizer import Sanitizer
 sanitizerConfig = {
     "tags": {
         "a", "h1", "h2", "h3", "strong", "em", "p", "ul", "ol",
-        "li", "br", "sub", "sup", "hr", "blockquote", "pre"
+        "li", "br", "sub", "sup", "hr", "blockquote", "pre",
+        "div", "span", "code",
     },
-    "attributes": {"a": ("href",)},
+    "attributes": {"a": ("href",), "div": ("class",), "span": ("class",), "code": ("class",)},
     "empty": {"hr", "a", "br"},
-    "separate": {"a", "p", "li"},
+    "separate": {"a", "p", "li", "span"},
     "whitespace": {"br"},
     "keep_typographic_whitespace": True,
 }
@@ -36,12 +37,11 @@ def ruenwiki_link_builder(label, base, end):
 def make_html(text, do_embeds = True):
     html = markdown.markdown(text, extensions=[
         WikiLinkExtension(build_url=ruenwiki_link_builder),
+        #'urlize',
+        'codehilite',
     ])
     html = sanitizeHtml(html)
     html = resolveUsernames(html)
     if do_embeds:
         html = resolveYoutubeEmbeds(html)
     return html
-
-html = make_html('[[Москва]], [[London]]')
-print(html)

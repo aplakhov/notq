@@ -34,6 +34,7 @@ nav ul li a, nav ul li span { display: block; padding: 0.5rem; color: white; }
 .inlineaction { color: gray; text-decoration: underline; text-decoration-style: dotted; cursor: pointer; }
 input.danger { color: #cc2f2e; }
 input[type=submit] { align-self: start; min-width: 10em; }
+.vdelim { margin-bottom: 1em; }
 
 nav a.username { color: white }
 a.username { color: #242f33; }

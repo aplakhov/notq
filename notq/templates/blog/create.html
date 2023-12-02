@@ -26,19 +26,6 @@
         <label for="paranoid">совершенно анонимно</label>
       </div>
     </div>
-    <details style="margin-left: 8px; margin-bottom:2em"><summary style="color:gray; list-style:revert; font-size:small">форматирование текста</summary>
-      <p>notq использует <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a> с некоторыми расширенными возможностями</p>
-      <table><thead><tr><th>Вы вводите</th><th>Что получается</th></tr></thead>
-      <tr><td>*курсив*</td><td><em>курсив</em></td></tr>
-      <tr><td>**жирный шрифт**</td><td><strong>жирный шрифт</strong></td></tr>
-      <tr><td>[Пример ссылки](http://example.net)</td><td><a href="http://example.net">Пример ссылки</a></td></tr>
-      <tr><td>/u/username</td><td><a class="username" href="/u/username"><img src="/static/silver.png"/>username</a></td></tr>
-      <tr><td>> цитата</td><td><strong><blockquote>цитата</blockquote></td></tr>
-      <tr><td>* пункт 1<br/>* пункт 2</td><td><ul><li>пункт 1</li><li>пункт 2</li></ul></td></tr>
-      <tr><td>ссылка на YouTube (на отдельной строке)</td><td>видеоплеер</td></tr>
-      <tr><td>быстрые ссылки на Википедию: [[Москва]], [[London]]</td><td>быстрые ссылки на Википедию: <a href="https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0">Москва</a>, <a href="https://en.wikipedia.org/wiki/London">London</a></td></tr>
-
-      </table>
-    </details>
+    {% include 'blog/formatting.html' %}
   </form>
 {% endblock %}

@@ -12,6 +12,7 @@
     <label for="body">Текст</label>
     <textarea name="body" id="body">{{ request.form['body'] or post['body'] }}</textarea>
     <input type="submit" value="Отправить">
+    {% include 'blog/formatting.html' %}
   </form>
   <hr>
   <form action="{{ url_for('blog.delete', id=post['id']) }}" method="post">
