@@ -6,7 +6,7 @@ from html_sanitizer import Sanitizer
 sanitizerConfig = {
     "tags": {
         "a", "h1", "h2", "h3", "strong", "em", "p", "ul", "ol",
-        "li", "br", "sub", "sup", "hr", "blockquote", "pre",
+        "li", "br", "sub", "sup", "s", "hr", "blockquote", "pre",
         "div", "span", "code",
     },
     "attributes": {"a": ("href",), "div": ("class",), "span": ("class",), "code": ("class",)},
@@ -37,7 +37,6 @@ def ruenwiki_link_builder(label, base, end):
 def make_html(text, do_embeds = True):
     html = markdown.markdown(text, extensions=[
         WikiLinkExtension(build_url=ruenwiki_link_builder),
-        #'urlize',
         'codehilite',
     ])
     html = sanitizeHtml(html)

@@ -36,3 +36,31 @@ def test_wikilinks():
     html = make_html('[[Москва]], [[London]]')
     expected = r'<a href="https://ru.wikipedia.org/wiki/%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0">Москва</a>, <a href="https://en.wikipedia.org/wiki/London">London</a>'
     assert(expected in html)
+
+def test_code_hilite():
+    code = '''
+    import re
+    import markdown
+    from markdown.extensions.wikilinks import WikiLinkExtension
+    from html_sanitizer import Sanitizer
+
+    sanitizerConfig = {
+        "tags": {
+            "a", "h1", "h2", "h3", "strong", "em", "p", "ul", "ol",
+            "li", "br", "sub", "sup", "s", "hr", "blockquote", "pre",
+            "div", "span", "code",
+        },
+        "attributes": {"a": ("href",), "div": ("class",), "span": ("class",), "code": ("class",)},
+        "empty": {"hr", "a", "br"},
+        "separate": {"a", "p", "li", "span"},
+        "whitespace": {"br"},
+        "keep_typographic_whitespace": True,
+    }
+
+    def sanitizeHtml(value):
+        sanitizer = Sanitizer(sanitizerConfig)
+        return sanitizer.sanitize(value)
+    '''
+    html = make_html(code)
+    assert('<div class="codehilite"><pre><code>' in html)
+    assert('<span class="kn">import</span>' in html)
