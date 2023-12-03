@@ -41,7 +41,7 @@ def make_html(text, do_embeds = True):
         WikiLinkExtension(build_url=ruenwiki_link_builder),
         UrlizeExtension(),
         SpoilerExtension(),
-        'codehilite',
+        'codehilite', 'nl2br'
     ])
     html = sanitizeHtml(html)
     html = resolveUsernames(html)

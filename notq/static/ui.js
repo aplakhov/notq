@@ -37,7 +37,7 @@ function addanswermenu(after, post, comment, cancomment) {
           <label for="newpost"/>отдельным постом</input>
         </div>
       </div>
-      <details style="margin-left: 8px; margin-bottom:2em"><summary style="color:gray; list-style:revert; font-size:small">форматирование текста</summary>
+      <details style="margin-left: 8px; margin-bottom:2em"><summary style="color:gray; list-style:revert; font-size:small">форматирование ответов</summary>
         <p>notq использует <a href="http://daringfireball.net/projects/markdown/syntax">Markdown</a> с некоторыми расширенными возможностями</p>
         <table><thead><tr><th>Вы вводите</th><th>Что получается</th></tr></thead>
         <tr><td>*курсив*</td><td><em>курсив</em></td></tr>
