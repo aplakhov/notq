@@ -11,7 +11,7 @@ from notq.db import get_db
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 def do_login(username, password):
-    if username == "Anonymous":
+    if username == "anonymous":
         error = True
     else:
         db = get_db()

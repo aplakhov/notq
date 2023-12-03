@@ -102,7 +102,7 @@ def best_comments(period):
 
 @bp.route('/u/<username>')
 def userpage(username):
-    if username == "Anonymous" and g.user and g.user['is_moderator']:
+    if username == "anonymous" and g.user and g.user['is_moderator']:
         posts = get_anon_posts()
     else:
         posts = get_user_posts(username)
@@ -255,7 +255,7 @@ def create():
             rendered = make_html(body)
             author_id = g.user['id']
             if paranoid:
-                author_id = 1 # Anonymous
+                author_id = 1 # anonymous
                 anon = True
 
             db.execute(
@@ -475,7 +475,7 @@ def addcomment():
         rendered = make_html(text, do_embeds=False)
         author_id = g.user['id']
         if paranoid:
-            author_id = 1 # Anonymous
+            author_id = 1 # anonymous
             anon = True
         add_comment(text, rendered, author_id, post_id, parent_id, anon)
         if parent_id:

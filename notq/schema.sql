@@ -15,7 +15,7 @@ CREATE TABLE user (
   banned_until TIMESTAMP
 );
 
-INSERT INTO user (username, password) VALUES ('Anonymous', '.');
+INSERT INTO user (username, password) VALUES ('anonymous', '.');
 
 CREATE TABLE post (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

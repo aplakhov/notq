@@ -80,7 +80,7 @@ def test_best_comments(client):
     make_post(client, 'post2', 'content2')
     client.post('/addcomment', data={'parentpost':2, 'parentcomment':0, 'text':'comment2', 'authorship': 'anon'})
 
-    #expected state:  abc:post1 -> abc:comment1 (1),  abc:post2 -> Anonymous:comment2 (1)
+    #expected state:  abc:post1 -> abc:comment1 (1),  abc:post2 -> anonymous:comment2 (1)
 
     register_and_login(client, 'def', 'a')
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3'})
@@ -91,7 +91,7 @@ def test_best_comments(client):
 
     #expected state:
     #   abc:post1 -> abc:comment1 (1) + def:comment3 (1)
-    #   abc:post2 -> Anonymous:comment2 (1) -> def:comment5 (1) + def:comment4 (1)
+    #   abc:post2 -> anonymous:comment2 (1) -> def:comment5 (1) + def:comment4 (1)
 
     # upvote comment 1, novote on comment4, and downvote comment3
     client.post('/1/votec/1/2')
@@ -100,7 +100,7 @@ def test_best_comments(client):
 
     #expected state:
     #   abc:post1 -> abc:comment1 (2) + def:comment3 (-1)
-    #   abc:post2 -> Anonymous:comment2 (1) -> def:comment5 (1) + def:comment4 (0)
+    #   abc:post2 -> anonymous:comment2 (1) -> def:comment5 (1) + def:comment4 (0)
 
     register_and_login(client, 'ghi', 'a')
     client.post('/1/votec/1/2')
@@ -108,11 +108,11 @@ def test_best_comments(client):
 
     #expected state:
     #   abc:post1 -> abc:comment1 (3) + def:comment3 (-1)
-    #   abc:post2 -> Anonymous:comment2 (3) -> def:comment5 (1) + def:comment4 (0)
+    #   abc:post2 -> anonymous:comment2 (3) -> def:comment5 (1) + def:comment4 (0)
 
     ordered = [
         'abc', 'post1', 'comment1',
-        'Anonymous', 'post2', 'comment2',
+        'anonymous', 'post2', 'comment2',
         'в ответ на чей-то комментарий', 'def', 'comment5'
     ]
     check_page_contains_ordered(client, '/best/day/comments', ordered)

@@ -66,7 +66,7 @@ def post_from_sql_row(p, ncomments, add_comments):
     }
     if p['anon']:
         res['author_id'] = 1
-        res['username'] = 'Anonymous'
+        res['username'] = 'anonymous'
     if add_comments:
         res['comments'] = get_post_comments(p['id'])
     return res
@@ -162,7 +162,7 @@ def get_user_posts(username):
 def get_anon_posts():
     db = get_db()
     anon_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, "1" AS author_id, "Anonymous" AS username, p.anon,'
+        'SELECT p.id, title, rendered, p.created, "1" AS author_id, "anonymous" AS username, p.anon,'
         ' p.edited_by_moderator, SUM(v.vote) AS votes'
         ' FROM post p'
         ' JOIN vote v ON v.post_id = p.id'
@@ -222,7 +222,7 @@ def comment_from_data(c, commentvotes, do_parent_post=False):
     }
     if c['anon']:
         res['author_id'] = 1
-        res['username'] = 'Anonymous'
+        res['username'] = 'anonymous'
     if commentvotes is not None:
         if c['id'] in commentvotes:
             res['votes'] = commentvotes[c['id']]['votes']

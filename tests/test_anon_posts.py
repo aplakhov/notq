@@ -56,7 +56,7 @@ def anon_comment_checks(client, type):
     register_and_login(client, 'def', 'a')
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':commenttext, 'authorship': type})
 
-    fragments = [title, body, commenttext, 'abc', 'Anonymous']
+    fragments = [title, body, commenttext, 'abc', 'anonymous']
     check_page_contains_several(client, '/1', fragments)
     client.get('/auth/logout')
     check_page_contains_several(client, '/1', fragments)
