@@ -14,6 +14,8 @@ def make_post(client, title, body, authorship="thisuser"):
 def check_page_contains(client, url, what):
     response = client.get(url)
     assert response.status_code == 200
+    if not what.encode() in response.data:
+        print(response.data.decode())
     assert(what.encode() in response.data)
 
 def check_page_doesnt_contain(client, url, what):
