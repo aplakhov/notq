@@ -64,6 +64,12 @@ def post_from_sql_row(p, ncomments, add_comments):
         'ncomments': make_comments_string(nc),
         'edited_by_moderator': p['edited_by_moderator']
     }
+    if p['edited']:
+        timediff = p['edited'] - p['created']
+        if timediff > timedelta(minutes=5):
+            res['edited'] = readable_timediff(p['edited'])
+            if res['edited'] == res['created']:
+                res['edited'] = ''
     if p['anon']:
         res['author_id'] = 1
         res['username'] = 'anonymous'
@@ -84,7 +90,7 @@ def best_post_scoring(post):
 def get_top_posts():
     db = get_db()
     all_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited_by_moderator,'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited, p.edited_by_moderator,'
         ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
@@ -102,7 +108,8 @@ def get_top_posts():
 def get_new_posts():
     db = get_db()
     new_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon,  p.edited_by_moderator, SUM(v.vote) AS votes'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited, p.edited_by_moderator,'
+        ' SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' GROUP BY p.id'
@@ -131,7 +138,7 @@ def get_best_posts(period):
     start = get_starting_date(period)
     db = get_db()
     period_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited_by_moderator,'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited, p.edited_by_moderator,'
         ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
@@ -149,7 +156,8 @@ def get_best_posts(period):
 def get_user_posts(username):
     db = get_db()
     user_posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited_by_moderator, SUM(v.vote) AS votes'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited, p.edited_by_moderator,'
+        ' SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' WHERE username == ? AND NOT p.anon'
@@ -163,7 +171,7 @@ def get_anon_posts():
     db = get_db()
     anon_posts = db.execute(
         'SELECT p.id, title, rendered, p.created, "1" AS author_id, "anonymous" AS username, p.anon,'
-        ' p.edited_by_moderator, SUM(v.vote) AS votes'
+        ' p.edited, p.edited_by_moderator, SUM(v.vote) AS votes'
         ' FROM post p'
         ' JOIN vote v ON v.post_id = p.id'
         ' WHERE p.anon'
@@ -381,7 +389,8 @@ def add_comment_vote(user_id, is_golden_user, post_id, comment_id, voteparam):
 def get_posts_by_id(id):
     db = get_db()
     posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited_by_moderator, SUM(v.vote) AS votes'
+        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited,'
+        ' p.edited_by_moderator, SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' WHERE p.id = ?'
