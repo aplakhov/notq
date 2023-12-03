@@ -1,5 +1,29 @@
 from notq.markup import make_html
 
+def check_simple_url(u):
+    html = make_html(u)
+    assert '<a href=' in html and u in html
+    html = make_html('Вот url:\n' + u)
+    assert '<a href=' in html and u in html
+    html = make_html('Вот url:\n\n' + u)
+    assert '<a href=' in html and u in html
+
+def check_user_link_preserved(u):
+    initial = '<a href="' + u + '">ссылка</a>'
+    assert initial in make_html(initial)
+
+def test_simple_urls():
+    check_simple_url("https://ya.ru")
+    check_simple_url("https://ru.wikipedia.org/wiki/Тест")
+    check_simple_url("https://yandex.ru/search/?text=тест")
+    check_simple_url("vk.com")
+    check_simple_url("mail.ru")
+
+    check_user_link_preserved("https://google.com")
+    check_user_link_preserved("http://reddit.com/r/programming/top?sort=month")
+
+    assert 'href' not in make_html("finder@yandex-team.ru")
+
 def test_youtube1():
     html = make_html("https://youtu.be/L_Guz73e6fw?t=5300")
     assert('iframe' in html and 'L_Guz73e6fw' in html and '5300' not in html)
