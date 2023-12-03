@@ -4,6 +4,7 @@ from flask import (
 from werkzeug.exceptions import abort
 
 from notq.auth import login_required
+from notq.autocut import autocut
 from notq.db import get_db
 from notq.markup import make_html
 from notq.data_model import *
@@ -462,13 +463,13 @@ def check_comment(post_id, text, as_separate_post):
         return 'Вы пытаетесь оставить слишком длинный комментарий'
     return None
 
-def do_create_comment(text, post_id, parent_id, anon, paranoid):
+def do_create_comment(text, post_id, parent_id, anon, paranoid, linked_post_id):
     rendered = make_html(text, do_embeds=False)
     author_id = g.user['id']
     if paranoid:
         author_id = 1 # anonymous
         anon = True
-    add_comment(text, rendered, author_id, post_id, parent_id, anon)
+    add_comment(text, rendered, author_id, post_id, parent_id, anon, linked_post_id)
     if parent_id:
         anchor = "#answer" + str(parent_id)
     else:
@@ -513,8 +514,8 @@ def addcomment():
                     title = f'Ответ на запись "{title}"'
             else:
                 title = "Ответ"
-            _, answer_id = do_create_post(title, f'[{title}](/{post_id})\n\n' + text, anon, paranoid)
-            stub_text = f'Ответил [здесь](/{answer_id})'
-            return do_create_comment(stub_text, post_id, parent_id, anon, paranoid)
+            _, answer_id = do_create_post(title, f'> [{title}](/{post_id})\n\n' + text, anon, paranoid)
+            answer_text = autocut(text, 1000, f'/{answer_id}')
+            return do_create_comment(answer_text, post_id, parent_id, anon, paranoid, answer_id)
         else:
-            return do_create_comment(text, post_id, parent_id, anon, paranoid)
+            return do_create_comment(text, post_id, parent_id, anon, paranoid, None)

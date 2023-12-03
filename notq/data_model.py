@@ -348,12 +348,12 @@ def get_post_comments_likes(post_id):
     res = { v['comment_id'] : { 'votes': v['votes'], 'weighted': v['weighted'] } for v in votes }
     return res
 
-def add_comment(text, rendered, author_id, post_id, parent_id, anon):
+def add_comment(text, rendered, author_id, post_id, parent_id, anon, linked_post_id):
     db = get_db()
     db.execute(
-        'INSERT INTO comment (body, rendered, author_id, post_id, parent_id, anon)'
-        ' VALUES (?, ?, ?, ?, ?, ?)',
-        (text, rendered, author_id, post_id, parent_id, anon)
+        'INSERT INTO comment (body, rendered, author_id, post_id, parent_id, anon, linked_post_id)'
+        ' VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (text, rendered, author_id, post_id, parent_id, anon, linked_post_id)
     )
     db.commit()
 

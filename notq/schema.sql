@@ -57,8 +57,10 @@ CREATE TABLE comment (
   parent_id INTEGER,
   anon BOOLEAN,
   edited_by_moderator BOOLEAN,
+  linked_post_id INTEGER,
   FOREIGN KEY (author_id) REFERENCES user (id),
-  FOREIGN KEY(post_id) REFERENCES post (id)
+  FOREIGN KEY (post_id) REFERENCES post (id)
+  FOREIGN KEY (linked_post_id) REFERENCES post (id)
 );
 CREATE INDEX idx_comment_post ON comment(post_id);
 CREATE INDEX idx_comment_author ON comment(author_id);

@@ -27,6 +27,9 @@ def check_page_contains_several(client, url, fragments):
     response = client.get(url)
     assert response.status_code == 200
     for what in fragments:
+        if not what.encode() in response.data:
+            print(response.data.decode())
+            print(what)
         assert(what.encode() in response.data)
 
 def become_moderator(app, username):
