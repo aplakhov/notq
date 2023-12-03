@@ -26,11 +26,7 @@ function addanswermenu(after, post, comment, cancomment) {
         </div>
         <div>
           <input type="radio" id="anon" name="authorship" value="anon"/>
-          <label for="anon">анонимно (с получением кармы)</label>
-        </div>
-        <div>
-          <input type="radio" id="paranoid" name="authorship" value="paranoid"/>
-          <label for="paranoid">совершенно анонимно</label>
+          <label for="anon">анонимно</label>
         </div>
         <div>
           <input type="checkbox" name="newpost">
