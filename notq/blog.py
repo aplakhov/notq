@@ -8,6 +8,7 @@ from notq.db import get_db
 from notq.markup import make_html
 from notq.data_model import *
 from notq.karma import get_user_karma, get_best_users
+from notq.constants import *
 
 bp = Blueprint('blog', __name__)
 
@@ -233,7 +234,36 @@ def check_post(title, body):
         return 'Слишком длинный заголовок, уложитесь в 150 символов'
     if not body:
         return 'Нужно что-нибудь написать'
+    if len(body) > MAX_POST_LEN:
+        return 'Пост слишком длинный. Попробуйте разбить его на несколько частей'
     return None
+
+def do_create_post(title, body, anon, paranoid):
+    rendered = make_html(body)
+    author_id = g.user['id']
+    if paranoid:
+        author_id = 1 # anonymous
+        anon = True
+
+    db = get_db()
+    db.execute(
+        'INSERT INTO post (title, body, rendered, author_id, anon)'
+        ' VALUES (?, ?, ?, ?, ?)',
+        (title, body, rendered, author_id, anon)
+    )
+    db.commit()
+    # upvote just created post
+    post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
+    if post:
+        if not paranoid:
+            add_vote(author_id, g.user['is_golden'], post['id'], 2)
+            return redirect(url_for('blog.one_post', id=post['id'])), post['id']
+        else:
+            add_vote(1, False, post['id'], 1)
+            return redirect(url_for('blog.new')), post['id']
+    else:
+        return redirect(url_for('blog.index')), None
+
 
 @bp.route('/create', methods=('GET', 'POST'))
 @login_required
@@ -252,29 +282,8 @@ def create():
         if error is not None:
             flash(error)
         else:
-            rendered = make_html(body)
-            author_id = g.user['id']
-            if paranoid:
-                author_id = 1 # anonymous
-                anon = True
-
-            db.execute(
-                'INSERT INTO post (title, body, rendered, author_id, anon)'
-                ' VALUES (?, ?, ?, ?, ?)',
-                (title, body, rendered, author_id, anon)
-            )
-            db.commit()
-            # upvote just created post
-            post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
-            if post:
-                if not paranoid:
-                    add_vote(author_id, g.user['is_golden'], post['id'], 2)
-                    return redirect(url_for('blog.one_post', id=post['id']))
-                else:
-                    add_vote(1, False, post['id'], 1)
-                    return redirect(url_for('blog.new'))
-            else:
-                return redirect(url_for('blog.index'))
+            res, _ = do_create_post(title, body, anon, paranoid)
+            return res
 
     return render_template('blog/create.html')
 
@@ -393,7 +402,7 @@ def updatecomment(post_id, comment_id):
     if request.method == 'POST':
         body = request.form['body']
 
-        if len(body) > 5000:
+        if len(body) > MAX_COMMENT_LEN:
             flash('Вы попытались оставить слишком длинный комментарий')
         else:
             update_or_delete_user_comment(is_moderator_edit(comment), body, post_id, comment_id)
@@ -440,14 +449,38 @@ def check_user_permissions_to_comment(db):
 
     return None
 
-def check_comment(post_id, text):
+def check_comment(post_id, text, as_separate_post):
     if not post_id:
         return 'Что-то сломалось или вы делаете что-то странное'
     if not text:
         return 'Нужно что-нибудь написать'
-    if len(text) > 5000:
-        return 'Вы попытались оставить слишком длинный комментарий'
+    if as_separate_post:
+        max_len = MAX_POST_LEN
+    else:
+        max_len = MAX_COMMENT_LEN
+    if len(text) > max_len:
+        return 'Вы пытаетесь оставить слишком длинный комментарий'
     return None
+
+def do_create_comment(text, post_id, parent_id, anon, paranoid):
+    rendered = make_html(text, do_embeds=False)
+    author_id = g.user['id']
+    if paranoid:
+        author_id = 1 # anonymous
+        anon = True
+    add_comment(text, rendered, author_id, post_id, parent_id, anon)
+    if parent_id:
+        anchor = "#answer" + str(parent_id)
+    else:
+        anchor = "#sendanswer"
+
+    # upvote just created comment
+    if not paranoid:
+        comment = get_db().execute('SELECT id FROM comment WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
+        if comment:
+            add_comment_vote(author_id, g.user['is_golden'], post_id, comment['id'], 2)
+            anchor = "#answer" + str(comment['id'])
+    return redirect(url_for('blog.one_post', id=post_id) + anchor)
 
 @bp.route('/addcomment', methods=('POST',))
 @login_required
@@ -462,31 +495,26 @@ def addcomment():
         parent_id = None
     anon = 'authorship' in request.form and request.form['authorship'] == 'anon'
     paranoid = 'authorship' in request.form and request.form['authorship'] == 'paranoid'
+    as_separate_post = 'newpost' in request.form and request.form['newpost'] == 'on'
 
-    db = get_db()
-    error = check_user_permissions_to_comment(db)
+    error = check_user_permissions_to_comment(get_db())
     if not error:
-        error = check_comment(post_id, text)
+        error = check_comment(post_id, text, as_separate_post)
 
     if error is not None:
         flash(error)
         return redirect(url_for('blog.one_post', id=post_id))
     else:
-        rendered = make_html(text, do_embeds=False)
-        author_id = g.user['id']
-        if paranoid:
-            author_id = 1 # anonymous
-            anon = True
-        add_comment(text, rendered, author_id, post_id, parent_id, anon)
-        if parent_id:
-            anchor = "#answer" + str(parent_id)
+        if as_separate_post:
+            parent_post = get_posts_by_id(post_id)
+            if len(parent_post) > 0:
+                title = parent_post[0]['title']
+                if 'Ответ на запись ' not in title:
+                    title = f'Ответ на запись "{title}"'
+            else:
+                title = "Ответ"
+            _, answer_id = do_create_post(title, f'[{title}](/{post_id})\n\n' + text, anon, paranoid)
+            stub_text = f'Ответил [здесь](/{answer_id})'
+            return do_create_comment(stub_text, post_id, parent_id, anon, paranoid)
         else:
-            anchor = "#sendanswer"
-
-        # upvote just created comment
-        if not paranoid:
-            comment = db.execute('SELECT id FROM comment WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
-            if comment:
-                add_comment_vote(author_id, g.user['is_golden'], post_id, comment['id'], 2)
-                anchor = "#answer" + str(comment['id'])
-        return redirect(url_for('blog.one_post', id=post_id) + anchor)
+            return do_create_comment(text, post_id, parent_id, anon, paranoid)

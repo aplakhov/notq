@@ -29,7 +29,7 @@ function addanswermenu(after, post, comment, cancomment) {
           <label for="anon">анонимно</label>
         </div>
         <div>
-          <input type="checkbox" name="newpost">
+          <input type="checkbox" id="newpost" name="newpost">
           <label for="newpost"/>отдельным постом</input>
         </div>
       </div>
