@@ -231,6 +231,13 @@ def comment_from_data(c, commentvotes, do_parent_post=False):
     if c['anon']:
         res['author_id'] = 1
         res['username'] = 'anonymous'
+    if c['edited']:
+        timediff = c['edited'] - c['created']
+        if timediff > timedelta(minutes=2):
+            res['edited'] = readable_timediff(c['edited'])
+            if res['edited'] == res['created']:
+                res['edited'] = ''
+
     if commentvotes is not None:
         if c['id'] in commentvotes:
             res['votes'] = commentvotes[c['id']]['votes']
@@ -252,7 +259,7 @@ def get_best_comments(period):
     db = get_db()
     comments_data = db.execute(
         '''
-        SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon,
+        SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon, c.edited,
            u.username, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
         FROM comment c
         JOIN user u ON c.author_id = u.id
@@ -271,7 +278,7 @@ def get_last_user_comments(username):
     db = get_db()
     comments_data = db.execute(
         '''
-        SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon,
+        SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon, c.edited,
            u.username, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
         FROM comment c
         JOIN user u ON c.author_id = u.id
@@ -308,7 +315,7 @@ def get_post_comments(post_id):
     # collect comments
     db = get_db()
     comments = db.execute(
-        'SELECT c.id, author_id, c.created, rendered, parent_id, username, anon'
+        'SELECT c.id, author_id, c.created, rendered, parent_id, username, anon, edited'
         ' FROM comment c JOIN user u ON c.author_id = u.id'
         ' WHERE post_id = ? ORDER BY c.id', (post_id,)
     ).fetchall()

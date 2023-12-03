@@ -28,7 +28,7 @@
           <small id="nvc{{comment['id']}}" style="color:gray">{{comment['votes']}}</small>
           <small><a class="vote" id="dvc{{comment['id']}}" {% if comment['id'] in cdownvoted %} style="color: #f00000" {% endif %} href="javascript:votec({{post['id']}},{{comment['id']}},-1,{{g.canVote}})" title="Меньше такого">▼</a></small>
           <strong style="margin:4px">{% set username=comment['username'] %}{% include 'user.html' %}</strong>
-          <small style="color:gray">{{ comment['created' ]}}</small>
+          <small style="color:gray">{% if comment['edited'] %}изменено {{ comment['edited'] }}{% else %}{{ comment['created' ]}}{% endif %}</small>
         </summary>
         {{comment['rendered']|safe}}
         {% if (g.user['id'] == comment['author_id'] or g.user['is_moderator']) and not comment['edited_by_moderator'] %}
