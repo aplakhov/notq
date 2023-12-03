@@ -50,11 +50,13 @@ CREATE TABLE comment (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   author_id INTEGER NOT NULL,
   created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  edited TIMESTAMP,
   body TEXT NOT NULL,
   rendered TEXT NOT NULL,
   post_id INTEGER NOT NULL,
   parent_id INTEGER,
   anon BOOLEAN,
+  edited_by_moderator BOOLEAN,
   FOREIGN KEY (author_id) REFERENCES user (id),
   FOREIGN KEY(post_id) REFERENCES post (id)
 );

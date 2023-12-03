@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Редактировать комментарий{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="body">Текст</label>
+    <textarea name="body" id="body">{{ request.form['body'] or comment['body'] }}</textarea>
+    <input type="submit" value="Отправить">
+    {% include 'blog/formatting.html' %}
+  </form>
+  <hr>
+  <p>Чтобы удалить комментарий, просто удалите весь его текст.</p>
+{% endblock %}

@@ -31,6 +31,9 @@
           <small style="color:gray">{{ comment['created' ]}}</small>
         </summary>
         {{comment['rendered']|safe}}
+        {% if (g.user['id'] == comment['author_id'] or g.user['is_moderator']) and not comment['edited_by_moderator'] %}
+        <a href="{{ url_for('blog.updatecomment', post_id=post['id'], comment_id=comment['id']) }}" class="smallaction">✎</a>
+        {% endif %}
         <small><a class="inlineaction" href="#" onclick="javascript:addanswermenu(this,{{ post['id'] }},{{ comment['id'] }},{{g.canVote}})">ответить</a></small>        
         {% if comment.children -%}
             <ul style="margin-top:12px">{{ loop(comment.children) }}</ul>

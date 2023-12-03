@@ -340,6 +340,62 @@ def update(id):
 
     return render_template('blog/update.html', post=post)
 
+def get_comment_to_update(id):
+    comment = get_db().execute(
+        'SELECT c.id, body, c.created, author_id, username, edited_by_moderator'
+        ' FROM comment c JOIN user u ON c.author_id = u.id'
+        ' WHERE c.id = ?',
+        (id,)
+    ).fetchone()
+
+    if comment is None:
+        abort(404, f"Comment id {id} doesn't exist.")
+
+    if comment['edited_by_moderator'] and not g.user['is_moderator']:
+        abort(403)
+
+    if comment['author_id'] != g.user['id'] and not g.user['is_moderator']:
+        abort(403)
+
+    return comment
+
+@bp.route('/<int:post_id>/updatecomment/<int:comment_id>', methods=('GET', 'POST'))
+@login_required
+def updatecomment(post_id, comment_id):
+    comment = get_comment_to_update(comment_id)
+
+    if request.method == 'POST':
+        body = request.form['body']
+
+        if len(body) > 5000:
+            flash('Вы попытались оставить слишком длинный комментарий')
+        else:
+            db = get_db()
+
+            if not body:
+                if is_moderator_edit(comment):
+                    rendered = "<p><em>комментарий удалён модератором</em></p>"
+                else:
+                    rendered = "<p><em>комментарий удалён</em></p>"
+                candelete = db.execute(
+                    'SELECT id FROM comment WHERE post_id=? AND parent_id=?', (post_id, comment_id)
+                ).fetchone() is None
+            else:
+                rendered = make_html(body, do_embeds=False)
+                candelete = False
+
+            if candelete:
+                db.execute('DELETE FROM comment WHERE id=?', (comment_id,))
+            else:
+                db.execute(
+                    'UPDATE comment SET body = ?, rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
+                    (body, rendered, datetime.now(), is_moderator_edit(comment), comment_id)
+                )
+            db.commit()
+        return redirect(url_for('blog.one_post', id=post_id) + "#answer" + str(comment_id))
+
+    return render_template('blog/updatecomment.html', comment=comment)
+
 @bp.route('/<int:id>/delete', methods=('POST',))
 @login_required
 def delete(id):
