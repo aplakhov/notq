@@ -88,3 +88,10 @@ def test_code_hilite():
     html = make_html(code)
     assert('<div class="codehilite"><pre><code>' in html)
     assert('<span class="kn">import</span>' in html)
+
+def test_spoilers():
+    html = make_html('%%spoiler text%%')
+    assert('<span class="spoiler"' in html and 'spoiler text' in html)
+
+    html = make_html('some of the text is %%a spoiler%%')
+    assert('<span class="spoiler"' in html and 'a spoiler' in html and 'some of the text is' in html)

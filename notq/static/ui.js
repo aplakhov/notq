@@ -44,7 +44,8 @@ function addanswermenu(after, post, comment, cancomment) {
         <tr><td>**жирный шрифт**</td><td><strong>жирный шрифт</strong></td></tr>
         <tr><td>[Пример ссылки](http://example.net)</td><td><a href="http://example.net">Пример ссылки</a></td></tr>
         <tr><td>/u/username</td><td><a class="username" href="/u/username"><img src="/static/silver.png"/>username</a></td></tr>
-        <tr><td>> цитата</td><td><strong><blockquote>цитата</blockquote></td></tr>
+        <tr><td>> цитата</td><td><blockquote>цитата</blockquote></td></tr>
+        <tr><td>%%спойлер%%</td><td><span class="spoiler">спойлер</span></td></tr>
         <tr><td>* пункт 1<br/>* пункт 2</td><td><ul><li>пункт 1</li><li>пункт 2</li></ul></td></tr>
         </table>
       </details>

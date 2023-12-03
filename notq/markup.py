@@ -3,6 +3,7 @@ import markdown
 from markdown.extensions.wikilinks import WikiLinkExtension
 from html_sanitizer import Sanitizer
 from notq.markdown_urlize import UrlizeExtension
+from notq.markdown_spoilers import SpoilerExtension
 
 sanitizerConfig = {
     "tags": {
@@ -39,6 +40,7 @@ def make_html(text, do_embeds = True):
     html = markdown.markdown(text, extensions=[
         WikiLinkExtension(build_url=ruenwiki_link_builder),
         UrlizeExtension(),
+        SpoilerExtension(),
         'codehilite',
     ])
     html = sanitizeHtml(html)
