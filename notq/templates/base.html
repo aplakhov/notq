@@ -12,7 +12,7 @@
     {% if g.user %}
       <li>
       <span title="ваша страница">{% set username=g.user['username'] %}{% include 'user.html' %}</span>
-      <span title="ваша карма" class="navkarma">0</span>
+      <span title="ваша карма" class="navkarma">{{ g.karma }}</span>
       </li>
     {% else %}
       <li><a href="{{ url_for('auth.login') }}">Войти</a>

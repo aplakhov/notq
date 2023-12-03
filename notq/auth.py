@@ -1,5 +1,6 @@
 import functools
 import re
+from notq.karma import get_user_karma
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
@@ -91,11 +92,13 @@ def load_logged_in_user():
 
     if user_id is None:
         g.user = None
+        g.karma = None
         g.canVote = 0
     else:
         g.user = get_db().execute(
             'SELECT * FROM user WHERE id = ?', (user_id,)
         ).fetchone()
+        g.karma = get_user_karma(g.user['username'])
         g.canVote = 1
 
 @bp.route('/logout')
