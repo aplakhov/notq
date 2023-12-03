@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from flask import g
 from notq.cache import cache
 from notq.db import get_db
+from notq.markup import make_html
 
 @cache.memoize(timeout=9)
 def get_user_votes_for_posts(user_id):
@@ -411,3 +412,48 @@ def get_user_votes_for_all_comments(user_id):
         'WHERE user_id = ?', (user_id,)
     ).fetchall()
     return upvoted_downvoted(votes)
+
+
+def update_or_delete_user_comment(is_moderator, body, post_id, comment_id):
+    db = get_db()
+
+    if not body:
+        if is_moderator:
+            rendered = "<p><em>комментарий удалён модератором</em></p>"
+        else:
+            rendered = "<p><em>комментарий удалён</em></p>"
+        candelete = db.execute(
+            'SELECT id FROM comment WHERE post_id=? AND parent_id=?', (post_id, comment_id)
+        ).fetchone() is None
+    else:
+        rendered = make_html(body, do_embeds=False)
+        candelete = False
+
+    if candelete:
+        db.execute('DELETE FROM comment WHERE id=?', (comment_id,))
+    else:
+        db.execute(
+            'UPDATE comment SET body = ?, rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
+            (body, rendered, datetime.now(), is_moderator, comment_id)
+        )
+    db.commit()
+
+
+def delete_user_comments(since, username):
+    db = get_db()
+    comments_data = db.execute(
+        '''
+        SELECT c.id, c.author_id, c.post_id, u.username
+        FROM comment c JOIN user u ON c.author_id = u.id
+        WHERE u.username == ? AND c.created > ?
+        ''', (username, since)
+    ).fetchall()
+    for c in comments_data:
+        update_or_delete_user_comment(True, '', c['post_id'], c['id'])
+
+
+def delete_user_posts(username):
+    db = get_db()
+    id = db.execute('SELECT id FROM user WHERE username=?', (username,)).fetchone()['id']
+    db.execute('DELETE FROM post WHERE author_id=?', (id,))
+    db.commit()

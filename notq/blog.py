@@ -129,6 +129,13 @@ def userpage(username):
                            posts=posts, comments=comments,
                            upvoted=upvoted, downvoted=downvoted)
 
+def do_ban_user(until, username):
+    db = get_db()
+    db.execute(
+                'UPDATE user SET banned_until = ? WHERE username = ?',
+                (until, username)
+            )
+    db.commit()
 
 @bp.route('/u/<username>/ban/<period>')
 def ban_user(username, period):
@@ -142,15 +149,32 @@ def ban_user(username, period):
         until = datetime.now() + timedelta(days=99000)
     else:
         abort(404)
-
-    db = get_db()
-    db.execute(
-                'UPDATE user SET banned_until = ? WHERE username = ?',
-                (until, username)
-            )
-    db.commit()
-
+    do_ban_user(until, username)
     flash("User " + username + " was banned until " + until.strftime('%d-%m-%Y %H:%M'))
+    return redirect(url_for('blog.userpage', username=username))
+
+
+@bp.route('/u/<username>/delete/<period>')
+def delete_user(username, period):
+    if not g.user or not g.user['is_moderator']:
+        abort(403)
+
+    message = "User " + username + "'s comments were removed"
+    if period == "day":
+        since = datetime.now() - timedelta(days=1)
+    elif period == "week":
+        since = datetime.now() - timedelta(days=7)
+    elif period == "all":
+        since = datetime.now() - timedelta(days=10000)
+        do_ban_user(datetime.now() + timedelta(days=99000), username)
+        delete_user_posts(username)
+        message = "User " + username + " and all their comments and posts were removed, and the user was banned"
+    else:
+        abort(404)
+
+    delete_user_comments(since, username)
+
+    flash(message)
     return redirect(url_for('blog.userpage', username=username))
 
 
@@ -173,6 +197,8 @@ def unban_user(username):
 @bp.route('/<int:id>')
 def one_post(id):
     posts = get_posts_by_id(id)
+    if len(posts) == 0:
+        abort(404, "Post doesn't exits")
     if g.user:
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
         cupvoted, cdownvoted = get_user_votes_for_comments(g.user['id'], id)
@@ -370,28 +396,8 @@ def updatecomment(post_id, comment_id):
         if len(body) > 5000:
             flash('Вы попытались оставить слишком длинный комментарий')
         else:
-            db = get_db()
+            update_or_delete_user_comment(is_moderator_edit(comment), body, post_id, comment_id)
 
-            if not body:
-                if is_moderator_edit(comment):
-                    rendered = "<p><em>комментарий удалён модератором</em></p>"
-                else:
-                    rendered = "<p><em>комментарий удалён</em></p>"
-                candelete = db.execute(
-                    'SELECT id FROM comment WHERE post_id=? AND parent_id=?', (post_id, comment_id)
-                ).fetchone() is None
-            else:
-                rendered = make_html(body, do_embeds=False)
-                candelete = False
-
-            if candelete:
-                db.execute('DELETE FROM comment WHERE id=?', (comment_id,))
-            else:
-                db.execute(
-                    'UPDATE comment SET body = ?, rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
-                    (body, rendered, datetime.now(), is_moderator_edit(comment), comment_id)
-                )
-            db.commit()
         return redirect(url_for('blog.one_post', id=post_id) + "#answer" + str(comment_id))
 
     return render_template('blog/updatecomment.html', comment=comment)

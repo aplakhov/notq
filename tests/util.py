@@ -1,3 +1,5 @@
+from notq.db import get_db
+
 def register_and_login(client, username, password):
     assert client.get('/auth/register').status_code == 200
     response = client.post(
@@ -24,3 +26,12 @@ def check_page_contains_several(client, url, fragments):
     assert response.status_code == 200
     for what in fragments:
         assert(what.encode() in response.data)
+
+def become_moderator(app, username):
+    with app.app_context():
+        db = get_db()
+        db.execute(
+            "UPDATE user SET is_moderator=1 WHERE username = ?",
+            (username,)
+        )
+        db.commit()
