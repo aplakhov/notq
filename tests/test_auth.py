@@ -14,6 +14,17 @@ def test_register(client, app):
         ).fetchone() is not None
 
 
+def test_register_bad_username(client):
+    response = client.post('/auth/register', data={'username': 'SuperModerator', 'password': 'a'})
+    assert 'Это имя нельзя зарегистрировать' in response.data.decode()
+
+
+def test_register_twice(client):
+    client.post('/auth/register', data={'username': 'AndreyPlakhov', 'password': 'a'})
+    response = client.post('/auth/register', data={'username': 'andreyPlakhov', 'password': 'a'})
+    assert 'уже зарегистрирован' in response.data.decode()
+
+
 @pytest.mark.parametrize(('username', 'password', 'message'), (
     ('', '', 'Нужно указать имя пользователя.'),
     ('a', 'abc', 'Слишком короткое имя пользователя.'),

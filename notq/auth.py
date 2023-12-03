@@ -32,10 +32,17 @@ usernamere = re.compile("^[A-Za-z0-9-]+$")
 def check_username(username):
     return usernamere.match(username)
 
+def is_disallowed_username(username):
+    if username in ['admin', 'anonymous', 'notq', 'u', 'yandex', 'mail', 'vk', 'sber']:
+        return True
+    if 'moderator' in username:
+        return True
+    return False
+
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].lower()
         password = request.form['password']
         db = get_db()
         error = None
@@ -45,6 +52,8 @@ def register():
         elif not check_username(username):
             error = 'Имя пользователя может состоять только из латиницы, цифр и символа "-".'
             ' Это нужно для того, чтобы адреса страниц пользователей были короткими и запоминающимися.'
+        elif is_disallowed_username(username):
+            error = 'Это имя нельзя зарегистрировать обычному пользователю.'
         elif len(username) < 3:
             error = "Слишком короткое имя пользователя. Имя не может состоять менее чем из трёх символов."
         elif len(username) > 40:
@@ -60,7 +69,7 @@ def register():
                 )
                 db.commit()
             except db.IntegrityError:
-                error = f"User {username} is already registered."
+                error = f"Пользователь {username} уже зарегистрирован."
             else:
                 return do_login(username, password)
 
