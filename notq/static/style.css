@@ -11,7 +11,9 @@ details > p { margin-bottom: 2px; margin-top: 8px; }
 nav { background: #3264c8; display: flex; align-items: center; padding: 0 0.5rem; }
 nav h1 { flex: auto; margin: 0; color: white; }
 nav ul  { display: flex; list-style: none; margin: 0; padding: 0; }
-nav ul li a, nav ul li span { display: block; padding: 0.5rem; color: white; }
+.logo { margin-left: 8px; margin-top: 10px; margin-bottom: 10px; }
+nav ul li a, nav ul li span { padding: 3px; color: white; }
+.navkarma { color: #EFCC7F; }
 .content { padding: 0 1rem 1rem; }
 .content > header { border-bottom: 1px solid lightgray; display: flex; align-items: flex-end; overflow: auto;}
 .content > header h1 { flex: auto; margin: 1rem 0 0.25rem 0; }
@@ -29,7 +31,6 @@ nav ul li a, nav ul li span { display: block; padding: 0.5rem; color: white; }
 .content label { font-weight: bold; margin-bottom: 0.5em; }
 .content input, .content textarea { margin-bottom: 1em; }
 .content textarea { min-height: 12em; resize: vertical; }
-.logo { margin-left: 8px; }
 .navlink { color: #aaa; margin-right: 20px; margin-top: 8px; margin-bottom: 8px; }
 .inlineaction { color: gray; text-decoration: underline; text-decoration-style: dotted; cursor: pointer; }
 .smallaction { color: gray; }
