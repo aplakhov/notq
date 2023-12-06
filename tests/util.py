@@ -21,6 +21,8 @@ def check_page_contains(client, url, what):
 def check_page_doesnt_contain(client, url, what):
     response = client.get(url)
     assert response.status_code == 200
+    if what.encode() in response.data:
+        print(response.data.decode())
     assert(what.encode() not in response.data)
 
 def check_page_contains_several(client, url, fragments):

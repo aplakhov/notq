@@ -21,10 +21,10 @@
       <tbody>
         {% for user in users %}
         <tr>
-        <td style="text-align:center">{{ user[0] }}.</td>
-        {% set selected = (g.user and g.user['username'] == user[1]) %}
-        <td>{%if selected%}<b>{%endif%}{% set username=user[1] %}{% include 'user.html' %}{%if selected%}</b>{%endif%}</a>
-        <td style="text-align:center">{{ user[2] }}</td>
+        <td style="text-align:center">{{ user['rank'] }}.</td>
+        {% set selected = (g.user and g.user['username'] == user['username']) %}
+        <td>{%if selected%}<b>{%endif%}{% set userdata=user %}{% include 'user.html' %}{%if selected%}</b>{%endif%}</a>
+        <td style="text-align:center">{{ user['karma'] }}</td>
         </tr>
         {% endfor %}
       </tbody>

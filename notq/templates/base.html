@@ -11,7 +11,7 @@
   <ul>
     {% if g.user %}
       <li>
-      <span title="ваша страница">{% set username=g.user['username'] %}{% include 'user.html' %}</span>
+      <span title="ваша страница">{% set userdata=g.user %}{% include 'user.html' %}</span>
       <span title="ваша карма" class="navkarma">{{ g.karma }}</span>
       </li>
     {% else %}

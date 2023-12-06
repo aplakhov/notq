@@ -1,1 +1,1 @@
-<a class="username" href="/u/{{username}}"><img src="{{ url_for('static', filename='silver.png') }}"/>{{username}}</a>
+<a class="username" href="/u/{{userdata['username']}}"><img src="{% if userdata['is_golden'] %}{{url_for('static', filename='gold.png')}}{% else %}{{url_for('static', filename='silver.png')}}{% endif %}"/>{{userdata['username']}}</a>

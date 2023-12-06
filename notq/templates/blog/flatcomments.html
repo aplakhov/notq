@@ -14,7 +14,7 @@
     <small><a class="vote" id="uvc{{comment['id']}}" {% if comment['id'] in cupvoted %} style="color: #00a000" {% endif %} href="javascript:votec({{comment['post_id']}},{{comment['id']}},1,{{g.canVote}})" title="Больше такого">▲</a></small>
     <small id="nvc{{comment['id']}}" style="color:gray">{{comment['votes']}}</small>
     <small><a class="vote" id="dvc{{comment['id']}}" {% if comment['id'] in cdownvoted %} style="color: #f00000" {% endif %} href="javascript:votec({{comment['post_id']}},{{comment['id']}},-1,{{g.canVote}})" title="Меньше такого">▼</a></small>
-    <strong style="margin:4px">{% set username=comment['username'] %}{% include 'user.html' %}</strong>
+    <strong style="margin:4px">{% set userdata=comment %}{% include 'user.html' %}</strong>
     <small style="color:gray">
       {{ comment['created']}}
       {% if not comment['parent_id'] %} к записи &laquo;<a href="/{{comment['post_id']}}">{{comment['title']}}</a>&raquo;{% endif %}

@@ -60,6 +60,7 @@ def post_from_sql_row(p, ncomments, add_comments):
         'created': readable_timediff(p['created']),
         'author_id': p['author_id'],
         'username': p['username'],
+        'is_golden': p['is_golden'],
         'votes': p['votes'],
         'ncomments': make_comments_string(nc),
         'edited_by_moderator': p['edited_by_moderator']
@@ -80,6 +81,7 @@ def post_from_sql_row(p, ncomments, add_comments):
     if p['anon']:
         res['author_id'] = 1
         res['username'] = 'anonymous'
+        res['is_golden'] = False
     if add_comments:
         res['comments'] = get_post_comments(p['id'])
     return res
@@ -97,7 +99,8 @@ def best_post_scoring(post):
 def get_top_posts():
     db = get_db()
     all_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, p.anon, p.edited, p.edited_by_moderator,'
+        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
+        ' p.anon, p.edited, p.edited_by_moderator,'
         ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
@@ -115,7 +118,8 @@ def get_top_posts():
 def get_new_posts():
     db = get_db()
     new_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, p.anon, p.edited, p.edited_by_moderator,'
+        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
+        ' p.anon, p.edited, p.edited_by_moderator,'
         ' SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
@@ -145,7 +149,8 @@ def get_best_posts(period):
     start = get_starting_date(period)
     db = get_db()
     period_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, p.anon, p.edited, p.edited_by_moderator,'
+        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
+        ' p.anon, p.edited, p.edited_by_moderator,'
         ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
@@ -163,7 +168,8 @@ def get_best_posts(period):
 def get_user_posts(username):
     db = get_db()
     user_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, p.anon, p.edited, p.edited_by_moderator,'
+        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
+        ' p.anon, p.edited, p.edited_by_moderator,'
         ' SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
@@ -233,11 +239,13 @@ def comment_from_data(c, commentvotes, do_parent_post=False):
         'created': readable_timediff(c['created']),
         'rendered': c['rendered'],
         'parent_id': c['parent_id'],
-        'username': c['username']
+        'username': c['username'],
+        'is_golden': c['is_golden']
     }
     if c['anon']:
         res['author_id'] = 1
         res['username'] = 'anonymous'
+        res['is_golden'] = False
     if c['edited']:
         timediff = c['edited'] - c['created']
         if timediff > timedelta(minutes=2):
@@ -267,7 +275,7 @@ def get_best_comments(period):
     comments_data = db.execute(
         '''
         SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon, c.edited,
-           u.username, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
+           u.username, u.is_golden, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
         FROM comment c
         JOIN user u ON c.author_id = u.id
         JOIN post p ON c.post_id = p.id
@@ -286,7 +294,7 @@ def get_last_user_comments(username):
     comments_data = db.execute(
         '''
         SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon, c.edited,
-           u.username, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
+           u.username, u.is_golden, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
         FROM comment c
         JOIN user u ON c.author_id = u.id
         JOIN post p ON c.post_id = p.id
@@ -322,7 +330,7 @@ def get_post_comments(post_id):
     # collect comments
     db = get_db()
     comments = db.execute(
-        'SELECT c.id, author_id, c.created, rendered, parent_id, username, anon, edited'
+        'SELECT c.id, author_id, c.created, rendered, parent_id, username, is_golden, anon, edited'
         ' FROM comment c JOIN user u ON c.author_id = u.id'
         ' WHERE post_id = ? ORDER BY c.id', (post_id,)
     ).fetchall()
@@ -403,7 +411,7 @@ def add_comment_vote(user_id, is_golden_user, post_id, comment_id, voteparam):
 def get_posts_by_id(id):
     db = get_db()
     posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, p.anon, p.edited,'
+        'SELECT p.id, title, rendered, p.created, author_id, username, is_golden, p.anon, p.edited,'
         ' p.edited_by_moderator, SUM(v.vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
