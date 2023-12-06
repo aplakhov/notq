@@ -116,3 +116,38 @@ def test_best_comments(client):
         'в ответ на чей-то комментарий', 'def', 'comment5'
     ]
     check_page_contains_ordered(client, '/best/day/comments', ordered)
+
+def test_golden_post_ranking(client, app):
+    register_and_login(client, 'abc', 'a')
+    make_post(client, 'post1', 'content1')
+    
+    register_and_login(client, 'gld', 'a')
+    make_user_golden(app, 'gld')
+    make_post(client, 'post2', 'content2')
+    
+    register_and_login(client, 'def', 'a')
+    make_post(client, 'post3', 'content3')
+    client.post('/1/vote/2')
+
+    register_and_login(client, 'ghi', 'a')
+    client.post('/1/vote/2')
+
+    check_page_contains_ordered(client, '/', ['post2', 'content2', 'post1', 'content1', 'post3', 'content3'])
+
+def test_golden_comment_ranking(client, app):
+    register_and_login(client, 'abc', 'a')
+    make_post(client, 'post1', 'content1')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment1'})
+
+    register_and_login(client, 'gld', 'a')
+    make_user_golden(app, 'gld')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment2'})
+
+    register_and_login(client, 'def', 'a')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3'})
+    client.post('/1/votec/1/2')
+
+    register_and_login(client, 'ghi', 'a')
+    client.post('/1/votec/1/2')
+
+    check_page_contains_ordered(client, '/1', ['post1', 'content1', 'comment2', 'comment1', 'comment3'])

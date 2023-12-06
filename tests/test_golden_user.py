@@ -1,14 +1,5 @@
 import time
-from notq.db import get_db
 from tests.util import *
-
-def make_user_golden(app, username):
-    with app.app_context():
-        db = get_db()
-        db.execute(
-            f"UPDATE user SET is_golden=1 WHERE username = '{username}'",
-        )
-        db.commit()
 
 def test_golden_user(client, app):
     register_and_login(client, 'gld', 'a')

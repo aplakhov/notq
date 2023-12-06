@@ -42,3 +42,12 @@ def become_moderator(app, username):
             (username,)
         )
         db.commit()
+
+def make_user_golden(app, username):
+    with app.app_context():
+        db = get_db()
+        db.execute(
+            "UPDATE user SET is_golden=1 WHERE username = ?",
+            (username,)
+        )
+        db.commit()
