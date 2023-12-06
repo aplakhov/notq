@@ -16,14 +16,14 @@ def check_page_contains(client, url, what):
     assert response.status_code == 200
     if not what.encode() in response.data:
         print(response.data.decode())
-    assert(what.encode() in response.data)
+    assert what.encode() in response.data
 
 def check_page_doesnt_contain(client, url, what):
     response = client.get(url)
     assert response.status_code == 200
     if what.encode() in response.data:
         print(response.data.decode())
-    assert(what.encode() not in response.data)
+    assert what.encode() not in response.data
 
 def check_page_contains_several(client, url, fragments):
     response = client.get(url)
@@ -32,7 +32,7 @@ def check_page_contains_several(client, url, fragments):
         if not what.encode() in response.data:
             print(response.data.decode())
             print(what)
-        assert(what.encode() in response.data)
+        assert what.encode() in response.data
 
 def become_moderator(app, username):
     with app.app_context():

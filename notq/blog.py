@@ -135,6 +135,15 @@ def userpage(username):
                            posts=posts, comments=comments,
                            upvoted=upvoted, downvoted=downvoted)
 
+@bp.route('/tag/<tagname>')
+def tagpage(tagname):
+    posts = get_tag_posts(tagname)
+    if g.user:
+        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
+    else:
+        upvoted = downvoted = []
+    return render_template('blog/tag.html', tagname=tagname, posts=posts, upvoted=upvoted, downvoted=downvoted)
+
 def do_ban_user(until, username):
     db = get_db()
     db.execute(
@@ -262,9 +271,10 @@ def do_create_post(title, body, anon, paranoid):
         (title, body, rendered, cut_rendered, author_id, anon)
     )
     db.commit()
-    # upvote just created post
+    # add tags and upvote just created post
     post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
     if post:
+        add_tags(body, post['id'], remove_old_tags=False)
         if not paranoid:
             add_vote(author_id, g.user['is_golden'], post['id'], 2)
             return redirect(url_for('blog.one_post', id=post['id'])), post['id']
@@ -381,6 +391,7 @@ def update(id):
                 (title, body, rendered, datetime.now(), is_moderator_edit(post), id)
             )
             db.commit()
+            add_tags(body, post['id'], remove_old_tags=True)
             return redirect(url_for('blog.one_post', id=id))
 
     return render_template('blog/update.html', post=post)

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from flask import g
 from notq.cache import cache
 from notq.db import get_db
+from notq.markdown_tags import collect_tags
 from notq.markup import make_html
 
 @cache.memoize(timeout=9)
@@ -179,6 +180,31 @@ def get_user_posts(username):
     ).fetchall()
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in user_posts]
+
+@cache.cached(timeout=60)
+def get_tag_posts(tagname):
+    db = get_db()
+    tagdata = db.execute(
+        'SELECT * FROM tag WHERE tagname = ?', (tagname,)
+    ).fetchone()
+    if tagdata is None:
+        return []
+    tag_posts = db.execute(
+        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
+        ' p.anon, p.edited, p.edited_by_moderator,'
+        ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
+        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' JOIN vote v ON v.post_id = p.id'
+        ' JOIN posttag t ON t.post_id = p.id'
+        ' WHERE t.tag_id = ?'
+        ' GROUP BY p.id', (tagdata['id'],)
+    ).fetchall()
+    ncomments = get_posts_comments_number()
+    now = datetime.now()
+    top_posts = [
+        post_from_sql_row(p, ncomments, False) for p in nlargest(100, tag_posts, key=lambda post: top_post_scoring(post, now))
+    ]
+    return top_posts
 
 def get_anon_posts():
     db = get_db()
@@ -488,3 +514,19 @@ def delete_user_posts(username):
     id = db.execute('SELECT id FROM user WHERE username=?', (username,)).fetchone()['id']
     db.execute('DELETE FROM post WHERE author_id=?', (id,))
     db.commit()
+
+
+def add_tags(post_text, post_id, remove_old_tags):
+    db = get_db()
+    if remove_old_tags:
+        db.execute('DELETE FROM posttag WHERE post_id=?', (post_id,))
+        db.commit()
+    tags = collect_tags(post_text)
+    for tag in tags:
+        db.execute('INSERT INTO tag (tagname) VALUES (?) ON CONFLICT DO NOTHING', (tag,))
+        db.commit()
+
+        tagdata = db.execute('SELECT id FROM tag WHERE tagname=?', (tag,)).fetchone()
+        if tagdata:            
+            db.execute('INSERT INTO posttag (post_id, tag_id) VALUES (?, ?) ON CONFLICT DO NOTHING', (post_id, tagdata['id']))
+            db.commit()

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Тэг {{tagname}}{% endblock %}
+
+{% block header %}
+  <a class="navlink" href="/">главная</a>
+  <a class="navlink" href="/new">новое</a>
+  <a class="navlink" href="/best/day">лучшее</a>
+  {% if g.user %}<a class="navlink" href="{{ url_for('blog.create') }}">написать</a>{% endif %}
+  {% include 'blog/bestmenu.html' %}
+{% endblock %}
+
+{% block content %}
+  <article class="post">
+    <header>
+      <div class="middle"><h1 class="bigusername">{{ tagname }}</h1></div>
+    </header>
+  </article>
+  <hr>
+  {% include 'blog/list_of_posts.html' %}
+{% endblock %}

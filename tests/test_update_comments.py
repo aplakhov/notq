@@ -17,10 +17,10 @@ def test_update_comments(client):
     assert response.status_code == 200
     html = response.data.decode()
 
-    assert('comment1' not in html)
-    assert('edited comment2' in html)
-    assert('comment3' not in html)
-    assert('комментарий удалён' in html)
+    assert 'comment1' not in html
+    assert 'edited comment2' in html
+    assert 'comment3' not in html
+    assert 'комментарий удалён' in html
 
     register_and_login(client, 'ghi', 'a')
     response = client.post('/1/updatecomment/2', data={'body': 'pwn'})

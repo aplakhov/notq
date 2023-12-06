@@ -14,6 +14,7 @@ CREATE TABLE user (
   is_moderator BOOLEAN NOT NULL DEFAULT 0,
   banned_until TIMESTAMP
 );
+CREATE INDEX idx_user_name ON user(username);
 
 INSERT INTO user (username, password) VALUES ('anonymous', '.');
 
@@ -79,3 +80,18 @@ CREATE TABLE commentvote (
   UNIQUE (user_id, post_id, comment_id)
 );
 CREATE INDEX idx_commentvote_post ON commentvote(post_id);
+
+CREATE TABLE tag (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  tagname TEXT UNIQUE NOT NULL
+);
+CREATE INDEX idx_tag_name ON tag(tagname);
+
+CREATE TABLE posttag (
+  tag_id INTEGER NOT NULL,
+  post_id INTEGER NOT NULL,
+  FOREIGN KEY (tag_id) REFERENCES tag (id),
+  FOREIGN KEY (post_id) REFERENCES post (id),
+  UNIQUE (tag_id, post_id)
+);
+CREATE INDEX idx_posttag_tag ON posttag(tag_id);

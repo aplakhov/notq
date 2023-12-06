@@ -3,8 +3,8 @@ from tests.util import *
 def assert_default_self_page(client, username):
     response = client.get('/u/' + username)
     assert response.status_code == 200
-    assert(username.encode() in response.data)
-    assert('Этот пользователь пока ничего о себе не написал'.encode() in response.data)
+    assert username.encode() in response.data
+    assert 'Этот пользователь пока ничего о себе не написал'.encode() in response.data
 
 def test_new_user(client):
     register_and_login(client, 'abc', 'a')
