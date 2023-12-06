@@ -241,6 +241,11 @@ def check_post(title, body):
 
 def do_create_post(title, body, anon, paranoid):
     rendered = make_html(body)
+    cut = autocut(body, AUTOCUT_POST_HEIGHT, False)
+    if cut and cut != body:
+        cut_rendered = make_html(cut)
+    else:
+        cut_rendered = ""
     author_id = g.user['id']
     if paranoid:
         author_id = 1 # anonymous
@@ -248,9 +253,9 @@ def do_create_post(title, body, anon, paranoid):
 
     db = get_db()
     db.execute(
-        'INSERT INTO post (title, body, rendered, author_id, anon)'
-        ' VALUES (?, ?, ?, ?, ?)',
-        (title, body, rendered, author_id, anon)
+        'INSERT INTO post (title, body, rendered, cut_rendered, author_id, anon)'
+        ' VALUES (?, ?, ?, ?, ?, ?)',
+        (title, body, rendered, cut_rendered, author_id, anon)
     )
     db.commit()
     # upvote just created post
@@ -515,7 +520,11 @@ def addcomment():
             else:
                 title = "Ответ"
             _, answer_id = do_create_post(title, f'> [{title}](/{post_id})\n\n' + text, anon, paranoid)
-            answer_text = autocut(text, 1000, f'/{answer_id}')
-            return do_create_comment(answer_text, post_id, parent_id, anon, paranoid, answer_id)
+            cut_text = autocut(text, AUTOCUT_COMMENT_HEIGHT, True)
+            if (cut_text == text) or (answer_id is None):
+                return do_create_comment(text, post_id, parent_id, anon, paranoid, answer_id)
+            else:
+                answer_text = f'{cut_text}\n[Читать дальше 🠖](/{answer_id})'
+                return do_create_comment(answer_text, post_id, parent_id, anon, paranoid, answer_id)
         else:
             return do_create_comment(text, post_id, parent_id, anon, paranoid, None)

@@ -25,6 +25,7 @@ CREATE TABLE post (
   title TEXT NOT NULL,
   body TEXT NOT NULL,
   rendered TEXT NOT NULL,
+  cut_rendered TEXT,
   anon BOOLEAN,
   show_in_feed BOOLEAN NOT NULL DEFAULT 1,
   edited_by_moderator BOOLEAN,
