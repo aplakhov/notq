@@ -13,23 +13,32 @@ from notq.constants import *
 
 bp = Blueprint('blog', __name__)
 
-@bp.route('/')
-def index():
-    posts = get_top_posts()
+def posts_list_with_pager(template_name, all_posts, page, pageurl, **kwargs):
     if g.user:
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
     else:
         upvoted = downvoted = []
-    return render_template('blog/index.html', posts=posts, upvoted=upvoted, downvoted=downvoted)
+    start = page * POST_FEED_PAGE_SIZE
+    if start >= len(all_posts):
+        posts = []
+    else:
+        posts = all_posts[start : start + POST_FEED_PAGE_SIZE]
+    pager = {
+        'numpages': (len(all_posts) + POST_FEED_PAGE_SIZE - 1) // POST_FEED_PAGE_SIZE,
+        'page': page,
+        'pageurl': pageurl
+    }
+    return render_template(template_name, posts=posts, pager=pager, upvoted=upvoted, downvoted=downvoted, **kwargs)
 
-@bp.route('/new')
-def new():
-    posts = get_new_posts()
-    if g.user:
-        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
-    else:
-        upvoted = downvoted = []
-    return render_template('blog/new.html', posts=posts, upvoted=upvoted, downvoted=downvoted)
+@bp.route('/', defaults={'page': 0})
+@bp.route('/page/<int:page>')
+def index(page):
+    return posts_list_with_pager('blog/index.html', get_top_posts(), page, '/page/')
+
+@bp.route('/new', defaults={'page': 0})
+@bp.route('/new/page/<int:page>')
+def new(page):
+    return posts_list_with_pager('blog/new.html', get_new_posts(), page, '/new/page/')
 
 def best_title(period):
     if period == "day":
@@ -45,30 +54,31 @@ def best_title(period):
     else:
         abort(404, f"Unknown time period {period}")
 
-@bp.route('/best/<period>')
-def best(period):
-    posts = get_best_posts(period)
-    if g.user:
-        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
-    else:
-        upvoted = downvoted = []
+@bp.route('/best/<period>', defaults={'page': 0})
+@bp.route('/best/<period>/page/<int:page>')
+def best(period, page):
     title = 'Лучшие записи ' + best_title(period)
-    return render_template('blog/best.html', 
-                           besturl=url_for('blog.best', period=period), 
-                           posts=posts, 
-                           upvoted=upvoted, 
-                           downvoted=downvoted,
-                           best_title=title)
+    return posts_list_with_pager('blog/best.html', get_best_posts(period), page, f'/best/{period}/page/', 
+                                 besturl=url_for('blog.best', period=period), best_title=title)
+
+@bp.route('/tag/<tagname>', defaults={'page': 0})
+@bp.route('/tag/<tagname>/page/<int:page>')
+def tagpage(tagname, page):
+    return posts_list_with_pager('blog/tag.html', get_tag_posts(tagname), page, f'/tag/{tagname}/page/', tagname=tagname)
 
 def add_current_user(users, all_users):
     if not g.user:
         return
     for u in users:
-        if g.user['username'] == u[1]:
+        if g.user['username'] == u['username']:
             return
     for n in range(len(all_users)):
         if all_users[n][0] == g.user['username']:
-            users.append((n+1, all_users[n][0], all_users[n][1]))
+            users.append({
+                'rank': n+1,
+                'username': all_users[n][0],
+                'karma': all_users[n][1]
+            })
             return
 
 @bp.route('/best/<period>/users')
@@ -134,15 +144,6 @@ def userpage(username):
     return render_template('blog/userpage.html', user=user, name=username,
                            posts=posts, comments=comments,
                            upvoted=upvoted, downvoted=downvoted)
-
-@bp.route('/tag/<tagname>')
-def tagpage(tagname):
-    posts = get_tag_posts(tagname)
-    if g.user:
-        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
-    else:
-        upvoted = downvoted = []
-    return render_template('blog/tag.html', tagname=tagname, posts=posts, upvoted=upvoted, downvoted=downvoted)
 
 def do_ban_user(until, username):
     db = get_db()

@@ -111,7 +111,7 @@ def get_top_posts():
     now = datetime.now()
     ncomments = get_posts_comments_number()
     top_posts = [
-        post_from_sql_row(p, ncomments, False) for p in nlargest(100, all_posts, key=lambda post: top_post_scoring(post, now))
+        post_from_sql_row(p, ncomments, False) for p in nlargest(500, all_posts, key=lambda post: top_post_scoring(post, now))
     ]
     return top_posts
 
@@ -126,7 +126,7 @@ def get_new_posts():
         ' JOIN vote v ON v.post_id = p.id'
         ' GROUP BY p.id'
         ' ORDER BY p.created DESC'
-        ' LIMIT 100'
+        ' LIMIT 500'
     ).fetchall()
     ncomments = get_posts_comments_number()
     return [ post_from_sql_row(p, ncomments, False) for p in new_posts ]
