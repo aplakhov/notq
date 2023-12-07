@@ -176,7 +176,8 @@ def get_user_posts(username):
         ' JOIN vote v ON v.post_id = p.id'
         ' WHERE username == ? AND NOT p.anon'
         ' GROUP BY p.id'
-        ' ORDER BY p.created DESC', (username,)
+        ' ORDER BY p.created DESC'
+        ' LIMIT 500', (username,)
     ).fetchall()
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in user_posts]
@@ -216,6 +217,7 @@ def get_anon_posts():
         ' WHERE p.anon'
         ' GROUP BY p.id'
         ' ORDER BY p.created DESC'
+        ' LIMIT 500'
     ).fetchall()
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in anon_posts]

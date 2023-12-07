@@ -116,16 +116,19 @@ def best_comments(period):
                            best_title=title,
                            cupvoted=cupvoted, cdownvoted=cdownvoted)
 
-@bp.route('/u/<username>')
-def userpage(username):
+@bp.route('/u/<username>', defaults={'page': 0})
+@bp.route('/u/<username>/page/<int:page>')
+def userpage(username, page):
     if username == "anonymous" and g.user and g.user['is_moderator']:
         posts = get_anon_posts()
     else:
         posts = get_user_posts(username)
-    if g.user:
-        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
+
+    if g.user and g.user['is_moderator']:
+        comments = get_last_user_comments(username)
     else:
-        upvoted = downvoted = []
+        comments = None
+
     created, nposts, ncomments, banned_until = get_user_stats(username)
     if not created:
         abort(404, f"User {username} doesn't exist.") 
@@ -137,13 +140,9 @@ def userpage(username):
         'banned': banned_until,
         'about': get_about_post(username)['rendered'],
     }
-    if g.user and g.user['is_moderator']:
-        comments = get_last_user_comments(username)
-    else:
-        comments = None
-    return render_template('blog/userpage.html', user=user, name=username,
-                           posts=posts, comments=comments,
-                           upvoted=upvoted, downvoted=downvoted)
+
+    return posts_list_with_pager('blog/userpage.html', posts, page, f'/u/{username}/page/', 
+                                 user=user, name=username, comments=comments)
 
 def do_ban_user(until, username):
     db = get_db()
