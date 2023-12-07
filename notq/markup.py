@@ -9,11 +9,11 @@ from notq.markdown_spoilers import SpoilerExtension
 sanitizerConfig = {
     "tags": {
         "a", "h1", "h2", "h3", "strong", "em", "p", "ul", "ol",
-        "li", "br", "sub", "sup", "s", "hr", "blockquote", "pre",
+        "li", "br", "sub", "sup", "s", "blockquote", "pre",
         "div", "span", "code",
     },
     "attributes": {"a": ("href",), "div": ("class",), "span": ("class",), "code": ("class",)},
-    "empty": {"hr", "a", "br"},
+    "empty": {"a", "br"},
     "separate": {"a", "p", "li", "span"},
     "whitespace": {"br"},
     "keep_typographic_whitespace": True,
