@@ -1,4 +1,3 @@
-import time
 from tests.util import *
 
 def test_golden_user(client, app):
