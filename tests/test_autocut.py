@@ -1,7 +1,6 @@
 from notq.autocut import autocut
 from notq.constants import AUTOCUT_YOUTUBE_HEIGHT
 from tests.util import *
-import time
 
 LOREM_IPSUM = '''Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud

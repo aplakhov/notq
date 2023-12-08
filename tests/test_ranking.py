@@ -1,5 +1,4 @@
 from tests.util import *
-import time
  
 def check_page_contains_ordered(client, url, fragments):
     response = client.get(url)

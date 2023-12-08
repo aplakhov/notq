@@ -1,4 +1,3 @@
-import time
 from tests.util import *
 
 def test_tags(client):
