@@ -42,10 +42,8 @@ def test_simple_autocut_after_youtube():
 def test_autocut_real_post(client):
     register_and_login(client, 'abc', 'a')
     make_post(client, 'post1', 'content1')
-    time.sleep(1)
     check_page_doesnt_contain(client, '/', 'Читать дальше')
     make_post(client, 'post1', ' '.join([LOREM_IPSUM] * 10))
-    time.sleep(1)
     check_page_contains(client, '/new', 'Читать дальше')
     check_page_doesnt_contain(client, '/1', 'Читать дальше')
     check_page_doesnt_contain(client, '/2', 'Читать дальше')

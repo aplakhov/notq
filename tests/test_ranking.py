@@ -15,11 +15,8 @@ def test_posts_ranking(client):
     register_and_login(client, 'abc', 'a')
 
     make_post(client, 'post1', 'content1')
-    time.sleep(1)
     make_post(client, 'post2', 'content2')
-    time.sleep(1)
     make_post(client, 'post3', 'content3')
-    time.sleep(1)
     make_post(client, 'post4', 'content4')
 
     # novote on post1, downvote post2
@@ -47,13 +44,9 @@ def test_comments_ranking(client):
 
     register_and_login(client, 'def', 'a')
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment1'})
-    time.sleep(1)
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':'comment2'})
-    time.sleep(1)
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3'})
-    time.sleep(1)
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment4'})
-    time.sleep(1)
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment5'})
     # novote on comment1, downvote comment3
     client.post('/1/votec/1/1')
@@ -76,7 +69,6 @@ def test_best_comments(client):
     register_and_login(client, 'abc', 'a')
     make_post(client, 'post1', 'content1')
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment1'})
-    time.sleep(1)
     make_post(client, 'post2', 'content2')
     client.post('/addcomment', data={'parentpost':2, 'parentcomment':0, 'text':'comment2', 'authorship': 'anon'})
 
@@ -84,9 +76,7 @@ def test_best_comments(client):
 
     register_and_login(client, 'def', 'a')
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3'})
-    time.sleep(1)
     client.post('/addcomment', data={'parentpost':2, 'parentcomment':0, 'text':'comment4'})
-    time.sleep(1)
     client.post('/addcomment', data={'parentpost':2, 'parentcomment':2, 'text':'comment5'})
 
     #expected state:

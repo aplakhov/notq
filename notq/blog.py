@@ -91,7 +91,7 @@ def best_users(period):
             'username': all_users[n][0],
             'karma': all_users[n][1]
         }
-        for n in range(min(50, len(all_users)))
+        for n in range(min(100, len(all_users)))
         if all_users[n][1] >= 0
     ]
     add_current_user(users, all_users)
@@ -272,7 +272,7 @@ def do_create_post(title, body, anon, paranoid):
     )
     db.commit()
     # add tags and upvote just created post
-    post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
+    post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY id DESC LIMIT 1', (author_id,)).fetchone()
     if post:
         add_tags(body, post['id'], remove_old_tags=False)
         if not paranoid:
@@ -497,7 +497,7 @@ def do_create_comment(text, post_id, parent_id, anon, paranoid, linked_post_id):
 
     # upvote just created comment
     if not paranoid:
-        comment = get_db().execute('SELECT id FROM comment WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
+        comment = get_db().execute('SELECT id FROM comment WHERE author_id = ? ORDER BY id DESC LIMIT 1', (author_id,)).fetchone()
         if comment:
             add_comment_vote(author_id, g.user['is_golden'], post_id, comment['id'], 2)
             anchor = "#answer" + str(comment['id'])

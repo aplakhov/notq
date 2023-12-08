@@ -7,9 +7,7 @@ def test_comment_as_post(client):
 
     register_and_login(client, 'def', 'a')
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment1'})
-    time.sleep(1)
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':'comment2', 'newpost':'on'})
-    time.sleep(1)
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3', 'newpost':'on'})
     
     time.sleep(10)
