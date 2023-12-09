@@ -85,15 +85,7 @@ def add_current_user(users, all_users):
 def best_users(period):
     title = 'Лучшие пользователи ' + best_title(period)
     all_users = get_best_users(period)
-    users = [
-        {
-            'rank': n+1,
-            'username': all_users[n][0],
-            'karma': all_users[n][1]
-        }
-        for n in range(min(100, len(all_users)))
-        if all_users[n][1] >= 0
-    ]
+    users = all_users[:100]
     add_current_user(users, all_users)
     return render_template('blog/best_users.html',
                            besturl=url_for('blog.best', period=period),
