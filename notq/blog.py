@@ -72,13 +72,9 @@ def add_current_user(users, all_users):
     for u in users:
         if g.user['username'] == u['username']:
             return
-    for n in range(len(all_users)):
-        if all_users[n][0] == g.user['username']:
-            users.append({
-                'rank': n+1,
-                'username': all_users[n][0],
-                'karma': all_users[n][1]
-            })
+    for u in all_users:
+        if g.user['username'] == u['username']:
+            users.append(u)
             return
 
 @bp.route('/best/<period>/users')
