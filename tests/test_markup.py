@@ -1,6 +1,12 @@
 from notq.markdown_tags import collect_tags
 from notq.markup import make_html
 
+def test_basic_markdown():
+    assert "<strong>test" in make_html('**test**')
+    assert "<em>test" in make_html('*test*')
+    assert '<a href="http://example.com">link label</a>' in make_html('[link label](http://example.com)')
+    assert '<a href="https://ya.ru">Ссылка кириллицей</a>' in make_html('[Ссылка кириллицей](https://ya.ru)\nЕщё какой-то текст')
+
 def check_simple_url(u):
     html = make_html(u)
     assert '<a href=' in html and u in html
