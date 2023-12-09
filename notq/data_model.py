@@ -59,6 +59,7 @@ def post_from_sql_row(p, ncomments, add_comments):
         'id': p['id'],
         'title': p['title'],
         'rendered': p['rendered'],
+        'created_ts': p['created'],
         'created': readable_timediff(p['created']),
         'author_id': p['author_id'],
         'username': p['username'],
@@ -107,7 +108,8 @@ def get_top_posts():
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' GROUP BY p.id'
-        ' ORDER BY p.created DESC'
+        ' ORDER BY p.id DESC'
+        ' LIMIT 10000'
     ).fetchall()
     now = datetime.now()
     ncomments = get_posts_comments_number()

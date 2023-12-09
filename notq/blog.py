@@ -14,17 +14,19 @@ from notq.constants import *
 bp = Blueprint('blog', __name__)
 
 def posts_list_with_pager(template_name, all_posts, page, pageurl, **kwargs):
+    justnow = datetime.now()
+    filtered_posts = [p for p in all_posts if p['created_ts'] < justnow]
     if g.user:
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
     else:
         upvoted = downvoted = []
     start = page * POST_FEED_PAGE_SIZE
-    if start >= len(all_posts):
+    if start >= len(filtered_posts):
         posts = []
     else:
-        posts = all_posts[start : start + POST_FEED_PAGE_SIZE]
+        posts = filtered_posts[start : start + POST_FEED_PAGE_SIZE]
     pager = {
-        'numpages': (len(all_posts) + POST_FEED_PAGE_SIZE - 1) // POST_FEED_PAGE_SIZE,
+        'numpages': (len(filtered_posts) + POST_FEED_PAGE_SIZE - 1) // POST_FEED_PAGE_SIZE,
         'page': page,
         'pageurl': pageurl
     }
@@ -202,6 +204,8 @@ def unban_user(username):
 def one_post(id, page):
     posts = get_posts_by_id(id)
     if not posts:
+        abort(404, "Post doesn't exits")
+    if posts[0]['created_ts'] > datetime.now():
         abort(404, "Post doesn't exits")
     if g.user:
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
