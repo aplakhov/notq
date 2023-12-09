@@ -5,8 +5,13 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='codehilite.css') }}">
 <script type="text/javascript" src="{{ url_for('static', filename='voting.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='ui.js') }}"></script>
+{% if black_logo %}
+<nav style="background:#242f33">
+  <img class="logo" src="{{ url_for('static', filename='goldlogo.png') }}"/>
+{% else %}
 <nav>
   <img class="logo" src="{{ url_for('static', filename='logo.png') }}"/>
+{% endif %}
   <h1>notq</h1>
   <ul>
     {% if g.user %}

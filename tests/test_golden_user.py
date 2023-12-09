@@ -34,3 +34,13 @@ def test_gold_in_best_users(client, app):
 
     client.post('/1/vote/2')
     check_page_contains_several(client, '/best/day/users', ['gld', 'gold.png'])
+
+def test_black_logo(client, app):
+    register_and_login(client, 'gld', 'a')
+    make_user_golden(app, 'gld')
+
+    fragments = ['gld', 'gold.png', 'goldlogo.png', 'ценный пользователь']
+    check_page_contains_several(client, '/u/gld', fragments)
+
+    register_and_login(client, 'abc', 'a')
+    check_page_contains_several(client, '/u/gld', fragments)

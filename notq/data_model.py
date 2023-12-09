@@ -235,12 +235,12 @@ def get_user_stats(username):
     ).fetchone()
     userdata = db.execute('SELECT * FROM user WHERE username ==?', (username,)).fetchone()
     if userdata is None:
-        return None, 0, 0, None
+        return None, 0, 0, None, False
     if userdata['banned_until'] and userdata['banned_until'] > datetime.now():
         banned = userdata['banned_until'].strftime('%d-%m-%Y')
     else:
         banned = None
-    return userdata['created'].strftime('%d-%m-%Y'), user_posts['n'], user_comments['n'], banned
+    return userdata['created'].strftime('%d-%m-%Y'), user_posts['n'], user_comments['n'], banned, userdata['is_golden']
 
 def get_about_post(username):
     db = get_db()

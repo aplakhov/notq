@@ -15,6 +15,7 @@
     <header>
       <div class="middle"><h1 class="bigusername">{{ name }}</h1></div>
     </header>
+    {% if black_logo %}<div><a href="#" style="color:#242f33"><img src="gold.png"/>&nbsp;ценный пользователь</a></div>{% endif %}
     {% if g.user and g.user['username'] == name %}
     <div style="background-color: #f0f0f0">это вы (<a href="/auth/logout">разлогиниться</a>)</div>
     {% endif %}

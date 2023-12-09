@@ -117,7 +117,7 @@ def userpage(username, page):
     else:
         comments = None
 
-    created, nposts, ncomments, banned_until = get_user_stats(username)
+    created, nposts, ncomments, banned_until, is_golden = get_user_stats(username)
     if not created:
         abort(404, f"User {username} doesn't exist.") 
     user = {
@@ -130,7 +130,7 @@ def userpage(username, page):
     }
 
     return posts_list_with_pager('blog/userpage.html', posts, page, f'/u/{username}/page/', 
-                                 user=user, name=username, comments=comments)
+                                 user=user, name=username, comments=comments, black_logo=is_golden)
 
 def do_ban_user(until, username):
     db = get_db()
