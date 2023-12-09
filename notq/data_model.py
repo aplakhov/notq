@@ -71,7 +71,7 @@ def post_from_sql_row(p, ncomments, add_comments):
         cut_rendered = p['cut_rendered']
         if cut_rendered and cut_rendered != res['rendered']:
             id = res['id']
-            res['rendered'] = cut_rendered + f'<p><a href="/{id}">Читать дальше 🠖</a></p>'
+            res['rendered'] = cut_rendered + f'<p><a href="/{id}">Читать дальше →</a></p>'
     except IndexError:
         pass
     if p['edited']:

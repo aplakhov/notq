@@ -535,7 +535,7 @@ def addcomment():
             if (cut_text == text) or (answer_id is None):
                 return do_create_comment(text, post_id, parent_id, anon, paranoid, answer_id)
             else:
-                answer_text = f'{cut_text}\n[Читать дальше 🠖](/{answer_id})'
+                answer_text = f'{cut_text}\n[Читать дальше →](/{answer_id})'
                 return do_create_comment(answer_text, post_id, parent_id, anon, paranoid, answer_id)
         else:
             return do_create_comment(text, post_id, parent_id, anon, paranoid, None)
