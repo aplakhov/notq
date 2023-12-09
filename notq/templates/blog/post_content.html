@@ -1,9 +1,9 @@
 <article class="post">
     <header>
       <div class="votes">
-        <a class="vote" id="uv{{post['id']}}" {% if post['id'] in upvoted %} style="color: #00a000" {% endif %} href="javascript:vote({{post['id']}},1,{{g.canVote}})" title="Больше такого">▲</a>
+        <a class="vote" id="uv{{post['id']}}" {% if post['id'] in upvoted %} style="color: #00a000" {% endif %} onclick="vote({{post['id']}},1,{{g.canVote}})" title="Больше такого">▲</a>
         <div id="nv{{post['id']}}">{{post['votes']}}</div>
-        <a class="vote" id="dv{{post['id']}}" {% if post['id'] in downvoted %} style="color: #f00000" {% endif %} href="javascript:vote({{post['id']}},-1,{{g.canVote}})" title="Меньше такого">▼</a></div>
+        <a class="vote" id="dv{{post['id']}}" {% if post['id'] in downvoted %} style="color: #f00000" {% endif %} onclick="vote({{post['id']}},-1,{{g.canVote}})" title="Меньше такого">▼</a></div>
         <div class="middle">
           <a href="{{ url_for('blog.one_post', id=post['id']) }}"><h1>{{ post['title'] }}</h1></a>
         <div class="about">
