@@ -201,10 +201,11 @@ def unban_user(username):
     return redirect(url_for('blog.userpage', username=username))
 
 
-@bp.route('/<int:id>')
-def one_post(id):
+@bp.route('/<int:id>', defaults={'page': 0})
+@bp.route('/<int:id>/page/<int:page>')
+def one_post(id, page):
     posts = get_posts_by_id(id)
-    if len(posts) == 0:
+    if not posts:
         abort(404, "Post doesn't exits")
     if g.user:
         upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
@@ -212,7 +213,14 @@ def one_post(id):
     else:
         upvoted = downvoted = []
         cupvoted = cdownvoted = []
-    return render_template('blog/one_post.html', posts=posts, 
+    pager = {
+        'page': page,
+        'numpages': 1
+    }
+    comments = posts[0]['comments']
+    if comments:
+        pager['numpages'] = comments[-1]['page'] + 1
+    return render_template('blog/one_post.html', posts=posts, pager=pager,
                             upvoted=upvoted, downvoted=downvoted,
                             cupvoted=cupvoted, cdownvoted=cdownvoted)
 

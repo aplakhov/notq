@@ -6,6 +6,7 @@ from notq.cache import cache
 from notq.db import get_db
 from notq.markdown_tags import collect_tags
 from notq.markup import make_html
+from notq.constants import POST_COMMENTS_PAGE_SIZE
 
 @cache.memoize(timeout=9)
 def get_user_votes_for_posts(user_id):
@@ -312,7 +313,7 @@ def get_best_comments(period):
         GROUP BY comment_id
         HAVING SUM(v.vote) > 0
         ORDER BY weighted DESC
-        LIMIT 100
+        LIMIT 250
         ''', (start,)
     ).fetchall()
     return [comment_from_data(c, None, True) for c in comments_data]
@@ -353,6 +354,29 @@ def sort_comments_tree(comments):
         if 'children' in c:
             sort_comments_tree(c['children'])
 
+def subtree_num_comments(subtree):
+    res = 1
+    if 'children' in subtree:
+        for child in subtree['children']:
+            res += subtree_num_comments(child)
+    return res
+
+def set_subtree_page_num(subtree, page):
+    subtree['page'] = page
+    if 'children' in subtree:
+        for child in subtree['children']:
+            set_subtree_page_num(child, page)
+
+def add_page_numbers(comments):
+    current_page = 0
+    current_page_num_comments = 0
+    for c in comments:
+        set_subtree_page_num(c, current_page)
+        current_page_num_comments += subtree_num_comments(c)
+        if current_page_num_comments >= POST_COMMENTS_PAGE_SIZE:
+            current_page += 1
+            current_page_num_comments = 0
+
 @cache.memoize(timeout=10)
 def get_post_comments(post_id):
     # collect comments
@@ -380,6 +404,7 @@ def get_post_comments(post_id):
             index[c['id']] = parent['children'][-1]
 
     sort_comments_tree(res)
+    add_page_numbers(res)
     return res
 
 def get_post_comments_likes(post_id):
