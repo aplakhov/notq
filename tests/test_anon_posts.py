@@ -67,3 +67,6 @@ def test_anon_comment1(client):
     
 def test_anon_comment2(client):
     anon_comment_checks(client, 'paranoid')
+
+def test_anonymous_userpage(client):
+    check_page_contains_several(client, '/u/anonymous', ['logo.png', 'anonymous'])

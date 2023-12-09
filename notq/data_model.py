@@ -211,7 +211,8 @@ def get_tag_posts(tagname):
 def get_anon_posts():
     db = get_db()
     anon_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, "1" AS author_id, "anonymous" AS username, p.anon,'
+        'SELECT p.id, title, rendered, cut_rendered, p.created,'
+        ' "1" AS author_id, "anonymous" AS username, 0 AS is_golden, p.anon,'
         ' p.edited, p.edited_by_moderator, SUM(v.vote) AS votes'
         ' FROM post p'
         ' JOIN vote v ON v.post_id = p.id'
