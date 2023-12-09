@@ -489,7 +489,7 @@ def do_create_comment(text, post_id, parent_id, anon, paranoid, linked_post_id):
     if parent_id:
         anchor = "#answer" + str(parent_id)
     else:
-        anchor = "#sendanswer"
+        anchor = "#answersection"
 
     # upvote just created comment
     if not paranoid:
