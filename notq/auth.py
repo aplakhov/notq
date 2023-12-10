@@ -38,6 +38,8 @@ def is_disallowed_username(username):
         return True
     if 'moderator' in username:
         return True
+    if username.startswith('robot-'):
+        return True
     return False
 
 @bp.route('/register', methods=('GET', 'POST'))
@@ -54,7 +56,7 @@ def register():
             error = 'Имя пользователя может состоять только из латиницы, цифр и символа "-".'
             ' Это нужно для того, чтобы адреса страниц пользователей были короткими и запоминающимися.'
         elif is_disallowed_username(username):
-            error = 'Это имя нельзя зарегистрировать обычному пользователю.'
+            error = 'Такое имя нельзя зарегистрировать обычному пользователю.'
         elif len(username) < 3:
             error = "Слишком короткое имя пользователя. Имя не может состоять менее чем из трёх символов."
         elif len(username) > 40:
