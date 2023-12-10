@@ -252,23 +252,23 @@ def check_post(title, body):
         return 'Пост слишком длинный. Попробуйте разбить его на несколько частей'
     return None
 
-def do_create_post(title, body, anon, paranoid):
+def do_create_post(title, body, user, anon, paranoid, creation_time=datetime.now()):
     rendered = make_html(body)
     cut = autocut(body, AUTOCUT_POST_HEIGHT, False)
     if cut and cut != body:
         cut_rendered = make_html(cut)
     else:
         cut_rendered = ""
-    author_id = g.user['id']
+    author_id = user['id']
     if paranoid:
         author_id = 1 # anonymous
         anon = True
 
     db = get_db()
     db.execute(
-        'INSERT INTO post (title, body, rendered, cut_rendered, author_id, anon)'
-        ' VALUES (?, ?, ?, ?, ?, ?)',
-        (title, body, rendered, cut_rendered, author_id, anon)
+        'INSERT INTO post (title, body, created, rendered, cut_rendered, author_id, anon)'
+        ' VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (title, body, creation_time, rendered, cut_rendered, author_id, anon)
     )
     db.commit()
     # add tags and upvote just created post
@@ -276,13 +276,13 @@ def do_create_post(title, body, anon, paranoid):
     if post:
         add_tags(body, post['id'], remove_old_tags=False)
         if not paranoid:
-            add_vote(author_id, g.user['is_golden'], post['id'], 2)
-            return redirect(url_for('blog.one_post', id=post['id'])), post['id']
+            add_vote(author_id, user['is_golden'], post['id'], 2)
+            return redirect(f"/{post['id']}"), post['id']
         else:
             add_vote(1, False, post['id'], 1)
-            return redirect(url_for('blog.new')), post['id']
+            return redirect('/new'), post['id']
     else:
-        return redirect(url_for('blog.index')), None
+        return redirect('/'), None
 
 
 @bp.route('/create', methods=('GET', 'POST'))
@@ -302,7 +302,7 @@ def create():
         if error is not None:
             flash(error)
         else:
-            res, _ = do_create_post(title, body, anon, paranoid)
+            res, _ = do_create_post(title, body, g.user, anon, paranoid)
             return res
 
     return render_template('blog/create.html')
@@ -539,7 +539,7 @@ def addcomment():
                     title = f'Ответ на запись "{title}"'
             else:
                 title = "Ответ"
-            _, answer_id = do_create_post(title, f'> [{title}](/{post_id})\n\n' + text, anon, paranoid)
+            _, answer_id = do_create_post(title, f'> [{title}](/{post_id})\n\n' + text, g.user, anon, paranoid)
             cut_text = autocut(text, AUTOCUT_COMMENT_HEIGHT, True)
             if (cut_text == text) or (answer_id is None):
                 return do_create_comment(text, post_id, parent_id, anon, paranoid, answer_id)

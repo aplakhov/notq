@@ -25,6 +25,9 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
+    from . import robopost
+    app.cli.add_command(robopost.robopost_command)
+
     from . import auth
     app.register_blueprint(auth.bp)
 
