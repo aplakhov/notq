@@ -383,12 +383,17 @@ def update(id):
             flash(error)
         else:
             rendered = make_html(body)
+            cut = autocut(body, AUTOCUT_POST_HEIGHT, False)
+            if cut and cut != body:
+                cut_rendered = make_html(cut)
+            else:
+                cut_rendered = ""
             if is_moderator_edit(post):
                 rendered = "<p class='moderated'>Отредактировано модератором</p>" + rendered
             db = get_db()
             db.execute(
-                'UPDATE post SET title = ?, body = ?, rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
-                (title, body, rendered, datetime.now(), is_moderator_edit(post), id)
+                'UPDATE post SET title = ?, body = ?, rendered = ?, cut_rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
+                (title, body, rendered, cut_rendered, datetime.now(), is_moderator_edit(post), id)
             )
             db.commit()
             add_tags(body, post['id'], remove_old_tags=True)
