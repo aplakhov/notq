@@ -1,5 +1,6 @@
 html { background: #eee; padding: 1rem; font: 400 16px/1.4 ProximaNova,Helvetica,sans-serif; color: #242f33 }
 body { max-width: 1024px; margin: 0 auto; background: white; font-family: Open Sans,Arial,sans-serif; }
+img { max-width: 800px; }
 h1 { color: #377ba8; margin: 1rem 0; }
 a { color: #377ba8; text-decoration: none; }
 hr { border: none; border-top: 1px solid lightgray; }

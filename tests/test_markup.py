@@ -7,6 +7,13 @@ def test_basic_markdown():
     assert '<a href="http://example.com">link label</a>' in make_html('[link label](http://example.com)')
     assert '<a href="https://ya.ru">Ссылка кириллицей</a>' in make_html('[Ссылка кириллицей](https://ya.ru)\nЕщё какой-то текст')
 
+def test_images_markdown():
+    img_url = 'https://avatars.mds.yandex.net/get-znatoki/1649112/2a0000017df2e071b3be6ccc02411b7d362a'
+    html = make_html(f"![image description]({img_url})")
+    assert '<img' in html
+    assert f'src="{img_url}"' in html
+    assert 'image description' in html
+
 def check_simple_url(u):
     html = make_html(u)
     assert '<a href=' in html and u in html

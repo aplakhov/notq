@@ -10,10 +10,10 @@ sanitizerConfig = {
     "tags": {
         "a", "h1", "h2", "h3", "strong", "em", "p", "ul", "ol",
         "li", "br", "sub", "sup", "s", "blockquote", "pre",
-        "div", "span", "code",
+        "div", "span", "code", "img",
     },
-    "attributes": {"a": ("href",), "div": ("class",), "span": ("class",), "code": ("class",)},
-    "empty": {"a", "br"},
+    "attributes": {"a": ("href",), "div": ("class",), "span": ("class",), "code": ("class",), "img": ("src", "alt",)},
+    "empty": {"a", "br", "img"},
     "separate": {"a", "p", "li", "span"},
     "whitespace": {"br"},
     "keep_typographic_whitespace": True,
