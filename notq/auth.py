@@ -6,6 +6,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 
 from notq.karma import get_user_karma
+from notq.cache import cache
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
@@ -89,6 +90,13 @@ def login():
         return do_login(username, password)
     return render_template('auth/login.html')
 
+@cache.memoize(timeout=3)
+def do_load_user(user_id):
+    query = select(user_table).where(user_table.c.id == user_id)
+    g.user = get_db().execute(query).fetchone()
+    g.karma = get_user_karma(g.user.username)
+    g.canVote = 1
+
 @bp.before_app_request
 def load_logged_in_user():
     user_id = session.get('user_id')
@@ -98,10 +106,7 @@ def load_logged_in_user():
         g.karma = None
         g.canVote = 0
     else:
-        query = select(user_table).where(user_table.c.id == user_id)
-        g.user = get_db().execute(query).fetchone()
-        g.karma = get_user_karma(g.user.username)
-        g.canVote = 1
+        do_load_user(user_id)
 
 @bp.route('/logout')
 def logout():
