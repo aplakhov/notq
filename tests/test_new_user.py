@@ -1,4 +1,5 @@
 from tests.util import *
+from notq.cache import cache
 
 def assert_default_self_page(client, username):
     response = client.get('/u/' + username)
@@ -64,3 +65,17 @@ def test_two_votes(client):
 
     fragments = [title, body, '<div id="nv1">2</div>']
     check_page_contains_several(client, '/', fragments + ['style="color: #00a000"'])
+
+def test_update_about(client):
+    register_and_login(client, 'abc', 'a')
+    assert_default_self_page(client, 'abc')
+    
+    assert client.get('/about').status_code == 200
+    client.post('/about', data={'body': 'hello world'})
+    check_page_contains(client, '/u/abc', 'hello world')
+
+    assert client.get('/about').status_code == 200
+    client.post('/about', data={'body': 'i am very smart'})
+    cache.clear() # userpage is cached
+    check_page_contains(client, '/u/abc', 'i am very smart')
+    check_page_doesnt_contain(client, '/u/abc', 'hello world')

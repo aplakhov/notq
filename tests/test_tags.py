@@ -10,6 +10,6 @@ def test_tags(client):
     check_page_contains_several(client, '/tag/boobs', ['abc', 'post_heading1', 'post_heading2'])
 
     check_page_contains_several(client, '/tag/math', ['abc', 'post_heading1'])
-    check_page_doesnt_contain(client, '/tag/random', 'post_heading2')
+    check_page_doesnt_contain(client, '/tag/math', 'post_heading2')
 
     check_page_doesnt_contain(client, '/tag/random', 'post_heading')

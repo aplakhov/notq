@@ -2,10 +2,12 @@ from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
 from werkzeug.exceptions import abort
+from sqlalchemy import insert
 
 from notq.auth import login_required
 from notq.autocut import autocut
 from notq.db import get_db
+from notq.db_structure import post_table
 from notq.markup import make_html
 from notq.data_model import *
 from notq.karma import get_user_karma, get_best_users
@@ -17,7 +19,7 @@ def posts_list_with_pager(template_name, all_posts, page, pageurl, **kwargs):
     justnow = datetime.now()
     filtered_posts = [p for p in all_posts if p['created_ts'] < justnow]
     if g.user:
-        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
+        upvoted, downvoted = get_user_votes_for_posts(g.user.id)
     else:
         upvoted = downvoted = []
     start = page * POST_FEED_PAGE_SIZE
@@ -72,10 +74,10 @@ def add_current_user(users, all_users):
     if not g.user:
         return
     for u in users:
-        if g.user['username'] == u['username']:
+        if g.user.username == u['username']:
             return
     for u in all_users:
-        if g.user['username'] == u['username']:
+        if g.user.username == u['username']:
             users.append(u)
             return
 
@@ -96,7 +98,7 @@ def best_comments(period):
     title = 'Лучшие комментарии ' + best_title(period)
     comments = get_best_comments(period)
     if g.user:
-        cupvoted, cdownvoted = get_user_votes_for_all_comments(g.user['id'])
+        cupvoted, cdownvoted = get_user_votes_for_all_comments(g.user.id)
     else:
         cupvoted = cdownvoted = []
     return render_template('blog/best_comments.html',
@@ -109,12 +111,12 @@ def best_comments(period):
 @bp.route('/u/<username>', defaults={'page': 0})
 @bp.route('/u/<username>/page/<int:page>')
 def userpage(username, page):
-    if username == "anonymous" and g.user and g.user['is_moderator']:
+    if username == "anonymous" and g.user and g.user.is_moderator:
         posts = get_anon_posts()
     else:
         posts = get_user_posts(username)
 
-    if g.user and g.user['is_moderator']:
+    if g.user and g.user.is_moderator:
         comments = get_last_user_comments(username)
     else:
         comments = None
@@ -128,23 +130,18 @@ def userpage(username, page):
         'nposts': nposts,
         'ncomments': ncomments,
         'banned': banned_until,
-        'about': get_about_post(username)['rendered'],
+        'about': get_about_post(username).rendered,
     }
 
     return posts_list_with_pager('blog/userpage.html', posts, page, f'/u/{username}/page/', 
                                  user=user, name=username, comments=comments, black_logo=is_golden)
 
 def do_ban_user(until, username):
-    db = get_db()
-    db.execute(
-                'UPDATE user SET banned_until = ? WHERE username = ?',
-                (until, username)
-            )
-    db.commit()
+    db_execute_commit('UPDATE user SET banned_until=:t WHERE username=:u', t=until, u=username)
 
 @bp.route('/u/<username>/ban/<period>')
 def ban_user(username, period):
-    if not g.user or not g.user['is_moderator']:
+    if not g.user or not g.user.is_moderator:
         abort(403)
     if period == "day":
         until = datetime.now() + timedelta(days=1)
@@ -161,7 +158,7 @@ def ban_user(username, period):
 
 @bp.route('/u/<username>/delete/<period>')
 def delete_user(username, period):
-    if not g.user or not g.user['is_moderator']:
+    if not g.user or not g.user.is_moderator:
         abort(403)
 
     message = "User " + username + "'s comments were removed"
@@ -185,15 +182,10 @@ def delete_user(username, period):
 
 @bp.route('/u/<username>/unban')
 def unban_user(username):
-    if not g.user or not g.user['is_moderator']:
+    if not g.user or not g.user.is_moderator:
         abort(403)
 
-    db = get_db()
-    db.execute(
-                'UPDATE user SET banned_until = ? WHERE username = ?',
-                (None, username)
-            )
-    db.commit()
+    db_execute_commit('UPDATE user SET banned_until=:t WHERE username=:u', t=None, u=username)
 
     flash("User " + username + " was unbanned")
     return redirect(url_for('blog.userpage', username=username))
@@ -208,8 +200,8 @@ def one_post(id, page):
     if posts[0]['created_ts'] > datetime.now():
         abort(404, "Post doesn't exits")
     if g.user:
-        upvoted, downvoted = get_user_votes_for_posts(g.user['id'])
-        cupvoted, cdownvoted = get_user_votes_for_comments(g.user['id'], id)
+        upvoted, downvoted = get_user_votes_for_posts(g.user.id)
+        cupvoted, cdownvoted = get_user_votes_for_comments(g.user.id, id)
     else:
         upvoted = downvoted = []
         cupvoted = cdownvoted = []
@@ -228,15 +220,15 @@ def check_user_permissions_to_post(db):
     now = datetime.now()
 
     # 1. is temporarily banned
-    if g.user['banned_until'] and g.user['banned_until'] > now:
-        return "Вы временно лишены слова и не можете оставлять записи до " + g.user['banned_until'].strftime('%d-%m-%Y %H:%M')
+    if g.user.banned_until and g.user.banned_until > now:
+        return "Вы временно лишены слова и не можете оставлять записи до " + g.user.banned_until.strftime('%d-%m-%Y %H:%M')
     
     # 2. posts too often
     since = now - timedelta(hours=1)
-    count = db.execute('SELECT COUNT(*) AS n FROM post WHERE author_id = ? AND created > ?', (g.user['id'], since)).fetchone()
-    if count and count['n'] >= 20:
+    count = db_execute('SELECT COUNT(*) AS n FROM post WHERE author_id=:id AND created>:t', id=g.user.id, t=since).fetchone()
+    if count and count.n >= 20:
         return "Вы делаете записи слишком часто. Подождите некоторое время."
-    if count and count['n'] >= 4 and not g.user['is_golden'] and get_user_karma(g.user['username']) < 100:
+    if count and count.n >= 4 and not g.user.is_golden and get_user_karma(g.user.username) < 100:
         return "Вы делаете записи слишком часто. Подождите некоторое время."
 
     return None
@@ -259,28 +251,32 @@ def do_create_post(title, body, user, anon, paranoid, creation_time=datetime.now
         cut_rendered = make_html(cut)
     else:
         cut_rendered = ""
-    author_id = user['id']
+    author_id = user.id
     if paranoid:
         author_id = 1 # anonymous
         anon = True
 
     db = get_db()
-    db.execute(
-        'INSERT INTO post (title, body, created, rendered, cut_rendered, author_id, anon)'
-        ' VALUES (?, ?, ?, ?, ?, ?, ?)',
-        (title, body, creation_time, rendered, cut_rendered, author_id, anon)
-    )
+    db.execute(insert(post_table).values(
+            title=title, 
+            body=body,
+            created=creation_time,
+            rendered=rendered, 
+            cut_rendered=cut_rendered,
+            author_id=author_id, 
+            anon=anon))
     db.commit()
     # add tags and upvote just created post
-    post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY id DESC LIMIT 1', (author_id,)).fetchone()
+    select_last_post = select(post_table.c.id).where(post_table.c.author_id==author_id).order_by(post_table.c.id.desc())
+    post = db.execute(select_last_post).fetchone()
     if post:
-        add_tags(body, post['id'], remove_old_tags=False)
+        add_tags(body, post.id, remove_old_tags=False)
         if not paranoid:
-            add_vote(author_id, user['is_golden'], post['id'], 2)
-            return redirect(f"/{post['id']}"), post['id']
+            add_vote(author_id, user.is_golden, post.id, 2)
+            return redirect(f"/{post.id}"), post.id
         else:
-            add_vote(1, False, post['id'], 1)
-            return redirect('/new'), post['id']
+            add_vote(1, False, post.id, 1)
+            return redirect('/new'), post.id
     else:
         return redirect('/'), None
 
@@ -308,20 +304,18 @@ def create():
     return render_template('blog/create.html')
 
 def get_post_to_update(id):
-    post = get_db().execute(
+    post = db_execute(
         'SELECT p.id, title, body, p.created, author_id, username, edited_by_moderator'
         ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' WHERE p.id = ?',
-        (id,)
-    ).fetchone()
+        ' WHERE p.id = :p', p=id).fetchone()
 
     if post is None:
         abort(404, f"Post id {id} doesn't exist.")
 
-    if post['edited_by_moderator'] and not g.user['is_moderator']:
+    if post.edited_by_moderator and not g.user.is_moderator:
         abort(403)
 
-    if post['author_id'] != g.user['id'] and not g.user['is_moderator']:
+    if post.author_id != g.user.id and not g.user.is_moderator:
         abort(403)
 
     return post
@@ -338,36 +332,31 @@ def about():
             flash(error)
         else:
             rendered = make_html(body)
-            author_id = g.user['id']
+            author_id = g.user.id
             db = get_db()
-            if not g.user['about_post_id']:
+            if not g.user.about_post_id:
                 # create a new post
-                db.execute(
+                db_execute(
                     'INSERT INTO post (title, body, rendered, author_id, show_in_feed)'
-                    ' VALUES (?, ?, ?, ?, ?)',
-                    (title, body, rendered, author_id, 0)
+                    ' VALUES (:t, :b, :r, :a, :show)',
+                    t=title, b=body, r=rendered, a=author_id, show=0
                 )
                 # set this post as an "about" post
-                post = db.execute('SELECT id FROM post WHERE author_id = ? ORDER BY created DESC LIMIT 1', (author_id,)).fetchone()
+                post = db_execute('SELECT id FROM post WHERE author_id=:a ORDER BY created DESC LIMIT 1', a=author_id).fetchone()
                 if post:
-                    db.execute(
-                        'UPDATE user SET about_post_id = ? WHERE id = ?',
-                        (post['id'], g.user['id'])
-                    )
-                    db.commit()
+                    db_execute_commit('UPDATE user SET about_post_id = :p WHERE id = :u', p=post.id, u=g.user.id)
             else:
                 # update an old post
-                db.execute('UPDATE post SET body = ?, rendered = ? WHERE id = ?', (body, rendered, g.user['about_post_id']))
-                db.commit()
-            return redirect(url_for('blog.userpage', username=g.user['username']))
+                db_execute_commit('UPDATE post SET body=:b, rendered=:r WHERE id=:p', b=body, r=rendered, p=g.user.about_post_id)
+            return redirect(url_for('blog.userpage', username=g.user.username))
 
     username = None
     if g.user:
-        username = g.user['username']
+        username = g.user.username
     return render_template('blog/about.html', post=get_about_post(username))
 
 def is_moderator_edit(what):
-    return what['author_id'] != g.user['id'] and g.user['is_moderator']
+    return what.author_id != g.user.id and g.user.is_moderator
 
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required
@@ -390,32 +379,27 @@ def update(id):
                 cut_rendered = ""
             if is_moderator_edit(post):
                 rendered = "<p class='moderated'>Отредактировано модератором</p>" + rendered
-            db = get_db()
-            db.execute(
-                'UPDATE post SET title = ?, body = ?, rendered = ?, cut_rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
-                (title, body, rendered, cut_rendered, datetime.now(), is_moderator_edit(post), id)
-            )
-            db.commit()
-            add_tags(body, post['id'], remove_old_tags=True)
+            db_execute_commit(
+                'UPDATE post SET title=:t, body=:b, rendered=:r, cut_rendered=:c, edited=:e, edited_by_moderator=:m WHERE id=:p',
+                t=title, b=body, r=rendered, c=cut_rendered, e=datetime.now(), m=is_moderator_edit(post), p=id)
+            add_tags(body, id, remove_old_tags=True)
             return redirect(url_for('blog.one_post', id=id))
 
     return render_template('blog/update.html', post=post)
 
 def get_comment_to_update(id):
-    comment = get_db().execute(
+    comment = db_execute(
         'SELECT c.id, body, c.created, author_id, username, edited_by_moderator'
         ' FROM comment c JOIN user u ON c.author_id = u.id'
-        ' WHERE c.id = ?',
-        (id,)
-    ).fetchone()
+        ' WHERE c.id=:c', c=id).fetchone()
 
     if comment is None:
         abort(404, f"Comment id {id} doesn't exist.")
 
-    if comment['edited_by_moderator'] and not g.user['is_moderator']:
+    if comment.edited_by_moderator and not g.user.is_moderator:
         abort(403)
 
-    if comment['author_id'] != g.user['id'] and not g.user['is_moderator']:
+    if comment.author_id != g.user.id and not g.user.is_moderator:
         abort(403)
 
     return comment
@@ -441,36 +425,34 @@ def updatecomment(post_id, comment_id):
 @login_required
 def delete(id):
     get_post_to_update(id)
-    db = get_db()
-    db.execute('DELETE FROM post WHERE id = ?', (id,))
-    db.commit()
+    db_execute_commit('DELETE FROM post WHERE id=:id', id=id)
     return redirect(url_for('blog.index'))
 
 @bp.route('/<int:post_id>/vote/<int:voteparam>', methods=('POST',))
 @login_required
 def vote(post_id, voteparam):
-    add_vote(g.user['id'], g.user['is_golden'], post_id, voteparam)
+    add_vote(g.user.id, g.user.is_golden, post_id, voteparam)
     return "1"
 
 @bp.route('/<int:post_id>/votec/<int:comment_id>/<int:voteparam>', methods=('POST',))
 @login_required
 def voteс(post_id, comment_id, voteparam):
-    add_comment_vote(g.user['id'], g.user['is_golden'], post_id, comment_id, voteparam)
+    add_comment_vote(g.user.id, g.user.is_golden, post_id, comment_id, voteparam)
     return "1"
 
 def check_user_permissions_to_comment(db):
     now = datetime.now()
 
     # 1. is temporarily banned
-    if g.user['banned_until'] and g.user['banned_until'] > now:
-        return "Вы временно лишены слова и не можете комментировать до " + g.user['banned_until'].strftime('%d-%m-%Y %H:%M')
+    if g.user.banned_until and g.user.banned_until > now:
+        return "Вы временно лишены слова и не можете комментировать до " + g.user.banned_until.strftime('%d-%m-%Y %H:%M')
     
     # 2. comments too often
     since = now - timedelta(minutes=5)
-    count = db.execute('SELECT COUNT(*) AS n FROM comment WHERE author_id = ? AND created > ?', (g.user['id'], since)).fetchone()
-    if count and count['n'] >= 20:
+    count = db_execute('SELECT COUNT(*) AS n FROM comment WHERE author_id=:id AND created > :c', id=g.user.id, c=since).fetchone()
+    if count and count.n >= 20:
         return "Вы оставляете комментарии слишком часто. Подождите несколько минут."
-    if count and count['n'] >= 5 and not g.user['is_golden'] and get_user_karma(g.user['username']) < 100:
+    if count and count.n >= 5 and not g.user.is_golden and get_user_karma(g.user.username) < 100:
         return "Вы оставляете комментарии слишком часто. Подождите несколько минут."
 
     return None
@@ -490,10 +472,12 @@ def check_comment(post_id, text, as_separate_post):
 
 def do_create_comment(text, post_id, parent_id, anon, paranoid, linked_post_id):
     rendered = make_html(text, do_embeds=False)
-    author_id = g.user['id']
+    author_id = g.user.id
+    is_golden = g.user.is_golden
     if paranoid:
         author_id = 1 # anonymous
         anon = True
+        is_golden = False
     add_comment(text, rendered, author_id, post_id, parent_id, anon, linked_post_id)
     if parent_id:
         anchor = "#answer" + str(parent_id)
@@ -501,11 +485,11 @@ def do_create_comment(text, post_id, parent_id, anon, paranoid, linked_post_id):
         anchor = "#answersection"
 
     # upvote just created comment
-    if not paranoid:
-        comment = get_db().execute('SELECT id FROM comment WHERE author_id = ? ORDER BY id DESC LIMIT 1', (author_id,)).fetchone()
-        if comment:
-            add_comment_vote(author_id, g.user['is_golden'], post_id, comment['id'], 2)
-            anchor = "#answer" + str(comment['id'])
+    comment = db_execute('SELECT id FROM comment WHERE author_id = :a ORDER BY id DESC LIMIT 1', a=author_id).fetchone()
+    if comment:
+        add_comment_vote(author_id, is_golden, post_id, comment.id, 2)
+        if not paranoid:
+            anchor = "#answer" + str(comment.id)
     return redirect(url_for('blog.one_post', id=post_id) + anchor)
 
 @bp.route('/addcomment', methods=('POST',))

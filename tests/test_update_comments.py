@@ -26,27 +26,21 @@ def test_update_comments(client):
     response = client.post('/1/updatecomment/2', data={'body': 'pwn'})
     assert response.status_code == 403
 
-def test_moderator_actions(client, app):
-    register_and_login(client, 'spamer', 'a')
-    make_post(client, 'post1', 'spamcontent1')
-    make_post(client, 'post2', 'spamcontent2')
-    make_post(client, 'post3', 'spamcontent3')
-    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'spamcontent'})
-    client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':'https://spamcontent.ru'})
-    client.post('/addcomment', data={'parentpost':2, 'parentcomment':0, 'text':r'%%spamcontent%%'})
+def test_cant_edit_not_your_comment(client):
+    register_and_login(client, 'abc', 'a')
+    make_post(client, 'post1', 'content1')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment1'})
 
     register_and_login(client, 'def', 'a')
-    become_moderator(app, 'def')
-    client.get('/u/spamer/delete/all')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment2'})
+    check_forbidden_action(client, '/1/updatecomment/1', data={'body':'new content'})
+    check_forbidden_action(client, '/1/updatecomment/1', data={'body':''})
 
-    response = client.get('/1')
-    assert response.status_code == 404
+    client.get('/auth/logout')
+    check_forbidden_action(client, '/1/updatecomment/1', data={'body':'new content'})
+    check_forbidden_action(client, '/1/updatecomment/1', data={'body':''})
+    check_forbidden_action(client, '/1/updatecomment/2', data={'body':'new content'})
+    check_forbidden_action(client, '/1/updatecomment/2', data={'body':''})
 
-    response = client.get('/')
-    assert response.status_code == 200
-    assert 'spamcontent' not in response.data.decode()
-
-    response = client.get('/u/spamer')
-    assert response.status_code == 200
-    html = response.data.decode()
-    assert 'Лишен слова' in html and 'spamer' in html
+    register_and_login(client, 'ghi', 'a')    
+    check_page_contains_several(client, '/1', ['comment1', 'comment2'])

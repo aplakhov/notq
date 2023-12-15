@@ -1,30 +1,29 @@
+from collections import namedtuple
 from heapq import nlargest
 from datetime import datetime, timedelta
-
 from flask import g
+from sqlalchemy import select
 from notq.cache import cache
-from notq.db import get_db
+from notq.db import get_db, db_execute, db_execute_commit
 from notq.markdown_tags import collect_tags
 from notq.markup import make_html
 from notq.constants import POST_COMMENTS_PAGE_SIZE
 
+from notq.db_structure import *
+
 @cache.memoize(timeout=9)
 def get_user_votes_for_posts(user_id):
-    db = get_db()
-    votes = db.execute(
-        'SELECT vote, post_id FROM vote WHERE user_id = ?', (user_id,)
-    ).fetchall()
-    upvoted = [v['post_id'] for v in votes if v['vote'] > 0]
-    downvoted = [v['post_id'] for v in votes if v['vote'] < 0]
+    votes = db_execute('SELECT vote, post_id FROM vote WHERE user_id = :id', id=user_id).fetchall()
+    upvoted = [v.post_id for v in votes if v.vote > 0]
+    downvoted = [v.post_id for v in votes if v.vote < 0]
     return upvoted, downvoted
 
 @cache.cached(timeout=12)
 def get_posts_comments_number():
-    db = get_db()
-    ncomments = db.execute(
+    ncomments = db_execute(
         'SELECT post_id, COUNT(*) AS ncomments FROM post p JOIN comment c ON c.post_id == p.id GROUP BY p.id'
     ).fetchall()
-    res = { p['post_id'] : p['ncomments'] for p in ncomments }
+    res = { nc.post_id : nc.ncomments for nc in ncomments }
     return res
 
 def make_comments_string(n):
@@ -51,66 +50,75 @@ def readable_timediff(created):
     else:
         return created.strftime('%d-%m-%Y')
 
-def post_from_sql_row(p, ncomments, add_comments):
+def post_from_sql_row(p, ncomments, full_post):
     nc = 0
-    if ncomments and p['id'] in ncomments:
-        nc = ncomments[p['id']]
+    if ncomments and p.id in ncomments:
+        nc = ncomments[p.id]
     res = {
-        'id': p['id'],
-        'title': p['title'],
-        'rendered': p['rendered'],
-        'created_ts': p['created'],
-        'created': readable_timediff(p['created']),
-        'author_id': p['author_id'],
-        'username': p['username'],
-        'is_golden': p['is_golden'],
-        'votes': p['votes'],
+        'id': p.id,
+        'title': p.title,
+        'rendered': p.rendered,
+        'created_ts': p.created,
+        'created': readable_timediff(p.created),
+        'author_id': p.author_id,
+        'username': p.username,
+        'is_golden': p.is_golden,
+        'votes': p.votes,
         'ncomments': make_comments_string(nc),
-        'edited_by_moderator': p['edited_by_moderator']
+        'edited_by_moderator': p.edited_by_moderator
     }
-    try:
-        cut_rendered = p['cut_rendered']
+    if not full_post:
+        cut_rendered = p.cut_rendered
         if cut_rendered and cut_rendered != res['rendered']:
             id = res['id']
             res['rendered'] = cut_rendered + f'<p><a href="/{id}">Читать дальше →</a></p>'
-    except IndexError:
-        pass
-    if p['edited']:
-        timediff = p['edited'] - p['created']
+    if p.edited:
+        timediff = p.edited - p.created
         if timediff > timedelta(minutes=5):
-            res['edited'] = readable_timediff(p['edited'])
+            res['edited'] = readable_timediff(p.edited)
             if res['edited'] == res['created']:
                 res['edited'] = ''
-    if p['anon']:
+    if p.anon:
         res['author_id'] = 1
         res['username'] = 'anonymous'
         res['is_golden'] = False
-    if add_comments:
-        res['comments'] = get_post_comments(p['id'])
+    if full_post:
+        res['comments'] = get_post_comments(p.id)
     return res
 
 def top_post_scoring(post, now):
     halflife = 18 * 3600
-    timediff = (now - post['created']).total_seconds()
+    timediff = (now - post.created).total_seconds()
     decay = halflife / (halflife + timediff)
-    return (post['weighted_votes'] + 4) * decay
+    return (post.weighted_votes + 4) * decay
 
 def best_post_scoring(post):
-    return post['weighted_votes']
+    return post.weighted_votes
+
+def select_posts_with_votes():
+    query = select(
+        post_table.c.id,
+        post_table.c.title,
+        post_table.c.rendered,
+        post_table.c.cut_rendered,
+        post_table.c.created,
+        post_table.c.anon,
+        post_table.c.edited,
+        post_table.c.edited_by_moderator,
+        post_table.c.author_id,
+        user_table.c.username,
+        user_table.c.is_golden,
+        func.sum(vote_table.c.vote).label('votes'),
+        func.sum(vote_table.c.weighted_vote).label('weighted_votes'),
+    )
+    query = query.join(user_table, user_table.c.id==post_table.c.author_id)
+    query = query.join(vote_table, vote_table.c.post_id==post_table.c.id)
+    query = query.group_by(post_table.c.id)
+    return query
 
 @cache.cached(timeout=10)
 def get_top_posts():
-    db = get_db()
-    all_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
-        ' p.anon, p.edited, p.edited_by_moderator,'
-        ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' JOIN vote v ON v.post_id = p.id'
-        ' GROUP BY p.id'
-        ' ORDER BY p.id DESC'
-        ' LIMIT 10000'
-    ).fetchall()
+    all_posts = get_db().execute(select_posts_with_votes().order_by(post_table.c.id.desc())).fetchall()
     now = datetime.now()
     ncomments = get_posts_comments_number()
     top_posts = [
@@ -120,17 +128,8 @@ def get_top_posts():
 
 @cache.cached(timeout=10)
 def get_new_posts():
-    db = get_db()
-    new_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
-        ' p.anon, p.edited, p.edited_by_moderator,'
-        ' SUM(v.vote) AS votes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' JOIN vote v ON v.post_id = p.id'
-        ' GROUP BY p.id'
-        ' ORDER BY p.created DESC'
-        ' LIMIT 500'
-    ).fetchall()
+    query = select_posts_with_votes().order_by(post_table.c.created.desc()).limit(500)
+    new_posts = get_db().execute(query).fetchall()
     ncomments = get_posts_comments_number()
     return [ post_from_sql_row(p, ncomments, False) for p in new_posts ]
 
@@ -151,202 +150,151 @@ def get_starting_date(period):
 @cache.memoize(timeout=30)
 def get_best_posts(period):
     start = get_starting_date(period)
-    db = get_db()
-    period_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
-        ' p.anon, p.edited, p.edited_by_moderator,'
-        ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE p.created > ?'
-        ' GROUP BY p.id', (start,)
-    ).fetchall()
+    query = select_posts_with_votes().where(post_table.c.created > start)
+    period_posts = get_db().execute(query).fetchall()
     ncomments = get_posts_comments_number()
     return [
         post_from_sql_row(p, ncomments, False) 
         for p in nlargest(100, period_posts, key=lambda post: best_post_scoring(post))
-        if p['weighted_votes'] >= 0
+        if p.weighted_votes >= 0
     ]
 
 @cache.cached(timeout=60)
 def get_user_posts(username):
-    db = get_db()
-    user_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
-        ' p.anon, p.edited, p.edited_by_moderator,'
-        ' SUM(v.vote) AS votes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE username == ? AND NOT p.anon'
-        ' GROUP BY p.id'
-        ' ORDER BY p.created DESC'
-        ' LIMIT 500', (username,)
-    ).fetchall()
+    query = select_posts_with_votes().where(user_table.c.username==username, ~post_table.c.anon)
+    query = query.order_by(post_table.c.created.desc()).limit(500)
+    print(query)
+    user_posts = get_db().execute(query).fetchall()
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in user_posts]
 
 @cache.cached(timeout=60)
 def get_tag_posts(tagname):
-    db = get_db()
-    tagdata = db.execute(
-        'SELECT * FROM tag WHERE tagname = ?', (tagname,)
-    ).fetchone()
+    tagdata = db_execute('SELECT * FROM tag WHERE tagname = :tagname', tagname=tagname).fetchone()
     if tagdata is None:
         return []
-    tag_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created, author_id, username, is_golden,'
-        ' p.anon, p.edited, p.edited_by_moderator,'
-        ' SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted_votes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' JOIN vote v ON v.post_id = p.id'
-        ' JOIN posttag t ON t.post_id = p.id'
-        ' WHERE t.tag_id = ?'
-        ' GROUP BY p.id', (tagdata['id'],)
-    ).fetchall()
+    query = select_posts_with_votes().join(posttag_table, posttag_table.c.post_id==post_table.c.id)
+    query = query.where(posttag_table.c.tag_id == tagdata.id)
+    tag_posts = get_db().execute(query).fetchall()
     ncomments = get_posts_comments_number()
     now = datetime.now()
     top_posts = [
-        post_from_sql_row(p, ncomments, False) for p in nlargest(100, tag_posts, key=lambda post: top_post_scoring(post, now))
+        post_from_sql_row(p, ncomments, False) 
+        for p in nlargest(100, tag_posts, key=lambda post: top_post_scoring(post, now))
     ]
     return top_posts
 
 def get_anon_posts():
-    db = get_db()
-    anon_posts = db.execute(
-        'SELECT p.id, title, rendered, cut_rendered, p.created,'
-        ' "1" AS author_id, "anonymous" AS username, 0 AS is_golden, p.anon,'
-        ' p.edited, p.edited_by_moderator, SUM(v.vote) AS votes'
-        ' FROM post p'
-        ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE p.anon'
-        ' GROUP BY p.id'
-        ' ORDER BY p.created DESC'
-        ' LIMIT 500'
-    ).fetchall()
+    query = select_posts_with_votes().where(post_table.c.anon).order_by(post_table.c.created).limit(500)
+    anon_posts = get_db().execute(query).fetchall()
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in anon_posts]
 
 def get_user_stats(username):
-    db = get_db()
-    user_posts = db.execute(
+    user_posts = db_execute(
         'SELECT COUNT(*) AS n FROM post p JOIN user u ON p.author_id = u.id'
-        ' WHERE username == ?', (username,)
-    ).fetchone()
-    user_comments = db.execute(
+        ' WHERE username=:u', u=username).fetchone()
+    user_comments = db_execute(
         'SELECT COUNT(*) AS n FROM comment c JOIN user u ON c.author_id = u.id'
-        ' WHERE username == ?', (username,)
-    ).fetchone()
-    userdata = db.execute('SELECT * FROM user WHERE username ==?', (username,)).fetchone()
+        ' WHERE username=:u', u=username).fetchone()
+    userdata = get_db().execute(select(user_table).where(user_table.c.username == username)).fetchone()
     if userdata is None:
         return None, 0, 0, None, False
-    if userdata['banned_until'] and userdata['banned_until'] > datetime.now():
-        banned = userdata['banned_until'].strftime('%d-%m-%Y')
+    if userdata.banned_until and userdata.banned_until > datetime.now():
+        banned = userdata.banned_until.strftime('%d-%m-%Y')
     else:
         banned = None
-    return userdata['created'].strftime('%d-%m-%Y'), user_posts['n'], user_comments['n'], banned, userdata['is_golden']
+    return userdata.created.strftime('%d-%m-%Y'), user_posts.n, user_comments.n, banned, userdata.is_golden
 
 def get_about_post(username):
-    db = get_db()
-    if g.user and username == g.user['username']:
-        about_post_id = g.user['about_post_id']
+    if g.user and username == g.user.username:
+        about_post_id = g.user.about_post_id
     elif username:
-        userdata = db.execute(
-            'SELECT about_post_id FROM user WHERE username = ?', (username,)
+        userdata = db_execute(
+            'SELECT about_post_id FROM user WHERE username = :u', u=username
         ).fetchone()
         if userdata:
-            about_post_id = userdata['about_post_id']
+            about_post_id = userdata.about_post_id
     if about_post_id:
-        return db.execute(
-            'SELECT * FROM post WHERE id = ?',
-            (about_post_id, )
+        return db_execute(
+            'SELECT * FROM post WHERE id = :p', p=about_post_id
         ).fetchone()
     else:
         default_about = 'Этот пользователь пока ничего о себе не написал'
-        return { 'body': default_about, 'rendered': default_about }
+        about_post = namedtuple('post', ('body, rendered'))
+        return about_post(body=default_about, rendered=default_about)
 
-def comment_from_data(c, commentvotes, do_parent_post=False):
+def comment_from_data(c):
     res = {
-        'id': c['id'],
-        'author_id': c['author_id'],
-        'created': readable_timediff(c['created']),
-        'rendered': c['rendered'],
-        'parent_id': c['parent_id'],
-        'username': c['username'],
-        'is_golden': c['is_golden']
+        'id': c.id,
+        'author_id': c.author_id,
+        'created': readable_timediff(c.created),
+        'rendered': c.rendered,
+        'parent_id': c.parent_id,
+        'username': c.username,
+        'is_golden': c.is_golden,
+        'votes': c.votes,
+        'weighted': c.weighted_votes,
+        'post_id': c.post_id,
+        'title': c.title
     }
-    if c['anon']:
+    if c.anon:
         res['author_id'] = 1
         res['username'] = 'anonymous'
         res['is_golden'] = False
-    if c['edited']:
-        timediff = c['edited'] - c['created']
+    if c.edited:
+        timediff = c.edited - c.created
         if timediff > timedelta(minutes=2):
-            res['edited'] = readable_timediff(c['edited'])
+            res['edited'] = readable_timediff(c.edited)
             if res['edited'] == res['created']:
                 res['edited'] = ''
-
-    if commentvotes is not None:
-        if c['id'] in commentvotes:
-            res['votes'] = commentvotes[c['id']]['votes']
-            res['weighted'] = commentvotes[c['id']]['weighted']
-        else:
-            res['votes'] = 0
-            res['weighted'] = 0
-    else:
-        res['votes'] = c['votes']
-        res['weighted'] = c['weighted']
-    if do_parent_post:
-        res['post_id'] = c['post_id']
-        res['title'] = c['title']
     return res
+
+def select_comments_with_votes():
+    query = select(
+        comment_table.c.id,
+        comment_table.c.author_id,
+        comment_table.c.post_id,
+        comment_table.c.created,
+        comment_table.c.rendered,
+        comment_table.c.parent_id,
+        comment_table.c.anon,
+        comment_table.c.edited,
+        comment_table.c.edited_by_moderator,
+        user_table.c.username,
+        user_table.c.is_golden,
+        func.sum(commentvote_table.c.vote).label('votes'),
+        func.sum(commentvote_table.c.weighted_vote).label('weighted_votes'),
+        post_table.c.title
+    )
+    query = query.join(user_table, user_table.c.id==comment_table.c.author_id)
+    query = query.join(post_table, post_table.c.id==comment_table.c.post_id)
+    query = query.join(commentvote_table, commentvote_table.c.comment_id==comment_table.c.id)
+    query = query.group_by(comment_table.c.id)
+    return query
 
 @cache.memoize(timeout=60)
 def get_best_comments(period):
     start = get_starting_date(period)
-    db = get_db()
-    comments_data = db.execute(
-        '''
-        SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon, c.edited,
-           u.username, u.is_golden, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
-        FROM comment c
-        JOIN user u ON c.author_id = u.id
-        JOIN post p ON c.post_id = p.id
-        JOIN commentvote v ON v.comment_id = c.id
-        WHERE c.created > ?
-        GROUP BY comment_id
-        HAVING SUM(v.vote) > 0
-        ORDER BY weighted DESC
-        LIMIT 250
-        ''', (start,)
-    ).fetchall()
-    return [comment_from_data(c, None, True) for c in comments_data]
+    query = select_comments_with_votes().where(comment_table.c.created > start)
+    comments_data = get_db().execute(query).fetchall()
+    return [
+        comment_from_data(c) 
+        for c in nlargest(250, comments_data, key=lambda c: c.weighted_votes)
+        if c.weighted_votes >= 0
+    ]
 
 def get_last_user_comments(username):
-    db = get_db()
-    comments_data = db.execute(
-        '''
-        SELECT c.id, c.author_id, c.post_id, c.created, c.rendered, c.parent_id, c.anon, c.edited,
-           u.username, u.is_golden, SUM(v.vote) AS votes, SUM(v.weighted_vote) AS weighted, p.title
-        FROM comment c
-        JOIN user u ON c.author_id = u.id
-        JOIN post p ON c.post_id = p.id
-        JOIN commentvote v ON v.comment_id = c.id
-        WHERE u.username == ? AND NOT c.anon
-        GROUP BY comment_id
-        ORDER BY c.created DESC
-        LIMIT 20
-        ''', (username,)
-    ).fetchall()
-    return [comment_from_data(c, None, True) for c in comments_data]
+    query = select_comments_with_votes().where(user_table.c.username == username, ~comment_table.c.anon)
+    query = query.order_by(comment_table.c.created.desc()).limit(20)
+    comments_data = get_db().execute(query).fetchall()
+    return [comment_from_data(c) for c in comments_data]
 
 @cache.memoize(timeout=9)
 def get_user_votes_for_posts(user_id):
-    db = get_db()
-    votes = db.execute(
-        'SELECT vote, post_id FROM vote WHERE user_id = ?', (user_id,)
-    ).fetchall()
-    upvoted = [v['post_id'] for v in votes if v['vote'] > 0]
-    downvoted = [v['post_id'] for v in votes if v['vote'] < 0]
+    votes = db_execute('SELECT vote, post_id FROM vote WHERE user_id = :id', id=user_id).fetchall()
+    upvoted = [v.post_id for v in votes if v.vote > 0]
+    downvoted = [v.post_id for v in votes if v.vote < 0]
     return upvoted, downvoted
 
 def sort_comments_tree(comments):
@@ -382,51 +330,41 @@ def add_page_numbers(comments):
 
 @cache.memoize(timeout=10)
 def get_post_comments(post_id):
-    # collect comments
-    db = get_db()
-    comments = db.execute(
-        'SELECT c.id, author_id, c.created, rendered, parent_id, username, is_golden, anon, edited'
-        ' FROM comment c JOIN user u ON c.author_id = u.id'
-        ' WHERE post_id = ? ORDER BY c.id', (post_id,)
-    ).fetchall()
-
-    # collect comment votes
-    commentvotes = get_post_comments_likes(post_id)
+    # select comments with votes from database
+    query = select_comments_with_votes().where(comment_table.c.post_id == post_id)
+    comments = get_db().execute(query).fetchall()
 
     # collect all top-level comments
-    res = [ comment_from_data(c, commentvotes) for c in comments if not c['parent_id'] ]
+    res = [ comment_from_data(c) for c in comments if not c.parent_id ]
     index = { c['id']: c for c in res }
 
     # insert all others into a tree
     for c in comments:
-        if c['parent_id'] and c['parent_id'] in index:
-            parent = index[c['parent_id']]
+        if c.parent_id and c.parent_id in index:
+            parent = index[c.parent_id]
             if not 'children' in parent:
                 parent['children'] = []
-            parent['children'].append(comment_from_data(c, commentvotes))
-            index[c['id']] = parent['children'][-1]
+            parent['children'].append(comment_from_data(c))
+            index[c.id] = parent['children'][-1]
 
     sort_comments_tree(res)
     add_page_numbers(res)
     return res
 
 def get_post_comments_likes(post_id):
-    db = get_db()
-    votes = db.execute(
+    votes = db_execute(
         'SELECT comment_id, SUM(vote) AS votes, SUM(weighted_vote) AS weighted FROM commentvote '
-        'WHERE post_id = ? GROUP BY comment_id', (post_id,)
+        'WHERE post_id = :p GROUP BY comment_id', p=post_id
     ).fetchall()
-    res = { v['comment_id'] : { 'votes': v['votes'], 'weighted': v['weighted'] } for v in votes }
+    res = { v.comment_id : { 'votes': v.votes, 'weighted': v.weighted } for v in votes }
     return res
 
 def add_comment(text, rendered, author_id, post_id, parent_id, anon, linked_post_id):
-    db = get_db()
-    db.execute(
+    db_execute_commit(
         'INSERT INTO comment (body, rendered, author_id, post_id, parent_id, anon, linked_post_id)'
-        ' VALUES (?, ?, ?, ?, ?, ?, ?)',
-        (text, rendered, author_id, post_id, parent_id, anon, linked_post_id)
+        ' VALUES (:t, :r, :author, :p, :c, :anon, :linked)',
+        t=text, r=rendered, author=author_id, p=post_id, c=parent_id, anon=anon, linked=linked_post_id
     )
-    db.commit()
 
 def vote_values(voteparam, is_golden_user):
     vote = voteparam - 1
@@ -442,121 +380,99 @@ def vote_values(voteparam, is_golden_user):
 def add_vote(user_id, is_golden_user, post_id, voteparam):
     if voteparam == 0 or voteparam == 1 or voteparam == 2:
         vote, weighted_vote, karma_vote = vote_values(voteparam, is_golden_user)
-        db = get_db()
-        db.execute(
-            'INSERT INTO vote(user_id,post_id,vote,weighted_vote,karma_vote) VALUES(?,?,?,?,?) '
+        db_execute_commit(
+            'INSERT INTO vote(user_id,post_id,vote,weighted_vote,karma_vote) VALUES(:u,:p,:v,:w,:k) '
             'ON CONFLICT(user_id,post_id) DO UPDATE '
             'SET vote=excluded.vote,weighted_vote=excluded.weighted_vote,karma_vote=excluded.karma_vote',
-            (user_id, post_id, vote, weighted_vote, karma_vote)
+            u=user_id, p=post_id, v=vote, w=weighted_vote, k=karma_vote
         )
-        db.commit()
 
 def add_comment_vote(user_id, is_golden_user, post_id, comment_id, voteparam):
     if voteparam == 0 or voteparam == 1 or voteparam == 2:
         vote, weighted_vote, karma_vote = vote_values(voteparam, is_golden_user)
-        db = get_db()
-        db.execute(
-            'INSERT INTO commentvote(user_id,post_id,comment_id,vote,weighted_vote,karma_vote) VALUES(?,?,?,?,?,?)'
+        db_execute_commit(
+            'INSERT INTO commentvote(user_id,post_id,comment_id,vote,weighted_vote,karma_vote) VALUES(:u,:p,:c,:v,:w,:k)'
             'ON CONFLICT(user_id,post_id,comment_id) DO UPDATE '
             'SET vote=excluded.vote,weighted_vote=excluded.weighted_vote,karma_vote=excluded.karma_vote',
-            (user_id, post_id, comment_id, vote, weighted_vote, karma_vote)
+            u=user_id, p=post_id, c=comment_id, v=vote, w=weighted_vote, k=karma_vote
         )
-        db.commit()
 
 @cache.memoize(timeout=10)
 def get_posts_by_id(id):
-    db = get_db()
-    posts = db.execute(
-        'SELECT p.id, title, rendered, p.created, author_id, username, is_golden, p.anon, p.edited,'
-        ' p.edited_by_moderator, SUM(v.vote) AS votes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE p.id = ?'
-        ' GROUP BY p.id', (id,)
-    ).fetchall()
-    return [post_from_sql_row(p, None, True) for p in posts]
+    posts = get_db().execute(select_posts_with_votes().where(post_table.c.id == id)).fetchall()
+    res = [post_from_sql_row(p, None, True) for p in posts]
+    return res
 
 def upvoted_downvoted(votes):
-    upvoted = [v['comment_id'] for v in votes if v['vote'] > 0]
-    downvoted = [v['comment_id'] for v in votes if v['vote'] < 0]
+    upvoted = [v.comment_id for v in votes if v.vote > 0]
+    downvoted = [v.comment_id for v in votes if v.vote < 0]
     return upvoted, downvoted
 
 @cache.memoize(timeout=10)
 def get_user_votes_for_comments(user_id, post_id):
-    db = get_db()
-    votes = db.execute(
+    votes = db_execute(
         'SELECT comment_id, vote FROM commentvote '
-        'WHERE post_id = ? AND user_id = ?', (post_id, user_id)
+        'WHERE post_id = :p AND user_id = :u', p=post_id, u=user_id
     ).fetchall()
     return upvoted_downvoted(votes)
 
 @cache.memoize(timeout=60)
 def get_user_votes_for_all_comments(user_id):
     # this should probably be optimized somehow?
-    db = get_db()
-    votes = db.execute(
+    votes = db_execute(
         'SELECT comment_id, vote FROM commentvote '
-        'WHERE user_id = ?', (user_id,)
+        'WHERE user_id = :u', u=user_id
     ).fetchall()
     return upvoted_downvoted(votes)
 
-
 def update_or_delete_user_comment(is_moderator, body, post_id, comment_id):
-    db = get_db()
 
     if not body:
         if is_moderator:
             rendered = "<p><em>комментарий удалён модератором</em></p>"
         else:
             rendered = "<p><em>комментарий удалён</em></p>"
-        candelete = db.execute(
-            'SELECT id FROM comment WHERE post_id=? AND parent_id=?', (post_id, comment_id)
+        candelete = db_execute(
+            'SELECT id FROM comment WHERE post_id=:p AND parent_id=:c', p=post_id, c=comment_id
         ).fetchone() is None
     else:
         rendered = make_html(body, do_embeds=False)
         candelete = False
 
     if candelete:
-        db.execute('DELETE FROM comment WHERE id=?', (comment_id,))
+        db_execute_commit('DELETE FROM comment WHERE id=:c', c=comment_id)
     else:
-        db.execute(
-            'UPDATE comment SET body = ?, rendered = ?, edited = ?, edited_by_moderator = ? WHERE id = ?',
-            (body, rendered, datetime.now(), is_moderator, comment_id)
+        db_execute_commit(
+            'UPDATE comment SET body = :b, rendered = :r, edited = :e, edited_by_moderator = :m WHERE id = :c',
+            b=body, r=rendered, e=datetime.now(), m=is_moderator, c=comment_id
         )
-    db.commit()
 
 
 def delete_user_comments(since, username):
-    db = get_db()
-    comments_data = db.execute(
+    comments_data = db_execute(
         '''
         SELECT c.id, c.author_id, c.post_id, u.username
         FROM comment c JOIN user u ON c.author_id = u.id
-        WHERE u.username == ? AND c.created > ?
-        ''', (username, since)
+        WHERE u.username == :u AND c.created > :c
+        ''', u=username, c=since
     ).fetchall()
     for c in comments_data:
-        update_or_delete_user_comment(True, '', c['post_id'], c['id'])
+        update_or_delete_user_comment(True, '', c.post_id, c.id)
 
 
 def delete_user_posts(username):
-    db = get_db()
-    id = db.execute('SELECT id FROM user WHERE username=?', (username,)).fetchone()['id']
-    db.execute('DELETE FROM post WHERE author_id=?', (id,))
-    db.commit()
+    id = db_execute('SELECT id FROM user WHERE username=:u', u=username).fetchone().id
+    db_execute_commit('DELETE FROM post WHERE author_id=:a', a=id)
 
 
 def add_tags(post_text, post_id, remove_old_tags):
-    db = get_db()
     if remove_old_tags:
-        db.execute('DELETE FROM posttag WHERE post_id=?', (post_id,))
-        db.commit()
+        db_execute_commit('DELETE FROM posttag WHERE post_id=:p', p=post_id)
     tags = collect_tags(post_text)
     for tag in tags:
-        db.execute('INSERT INTO tag (tagname) VALUES (?) ON CONFLICT DO NOTHING', (tag,))
-        db.commit()
+        db_execute_commit('INSERT INTO tag (tagname) VALUES (:t) ON CONFLICT DO NOTHING', t=tag)
 
-        tagdata = db.execute('SELECT id FROM tag WHERE tagname=?', (tag,)).fetchone()
+        tagdata = db_execute('SELECT id FROM tag WHERE tagname=:t', t=tag).fetchone()
         if tagdata:            
-            db.execute('INSERT INTO posttag (post_id, tag_id) VALUES (?, ?) ON CONFLICT DO NOTHING', (post_id, tagdata['id']))
-            db.commit()
+            db_execute_commit('INSERT INTO posttag (post_id, tag_id) VALUES (:p, :t) ON CONFLICT DO NOTHING', 
+                              p=post_id, t=tagdata.id)

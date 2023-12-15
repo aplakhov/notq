@@ -84,7 +84,7 @@ def test_best_comments(client):
 
     # upvote comment 1, novote on comment4, and downvote comment3
     client.post('/1/votec/1/2')
-    client.post('/1/votec/4/1')
+    client.post('/2/votec/4/1')
     client.post('/1/votec/3/0')
 
     #expected state:
@@ -105,6 +105,7 @@ def test_best_comments(client):
         'в ответ на чей-то комментарий', 'def', 'comment5'
     ]
     check_page_contains_ordered(client, '/best/day/comments', ordered)
+    check_page_doesnt_contain(client, 'best/all/comments', 'comment3')
 
 def test_golden_post_ranking(client, app):
     register_and_login(client, 'abc', 'a')

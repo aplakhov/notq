@@ -1,25 +1,19 @@
 import datetime
 import json
 import click
-from notq.db import get_db
+from notq.db import db_execute, db_execute_commit
 from notq.blog import do_create_post
 from werkzeug.security import generate_password_hash, check_password_hash
 
 def post_one(title, body, creation_time, username, password):
-    db = get_db()
-    user = db.execute(
-        'SELECT * FROM user WHERE username = ?', (username,)
-    ).fetchone()
+    user = db_execute('SELECT * FROM user WHERE username=:u', u=username).fetchone()
     if not user:
-        db.execute(
-            "INSERT INTO user (username, password, created) VALUES (?, ?, ?)",
-            (username, generate_password_hash(password), creation_time),
+        db_execute_commit(
+            "INSERT INTO user (username, password, created) VALUES (:u, :p, :c)",
+            u=username, p=generate_password_hash(password), c=creation_time
         )
-        db.commit()
-        user = db.execute(
-            'SELECT * FROM user WHERE username = ?', (username,)
-        ).fetchone()
-    elif not check_password_hash(user['password'], password):
+        user = db_execute('SELECT * FROM user WHERE username=:u', u=username).fetchone()
+    elif not check_password_hash(user.password, password):
         raise RuntimeError("Wrong password")
     
     do_create_post(title, body, user, anon=False, paranoid=False, creation_time=creation_time)

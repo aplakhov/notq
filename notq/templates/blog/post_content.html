@@ -11,10 +11,10 @@
           {% if post['edited'] %}изменено {{ post['edited'] }}{% else %}{{ post['created'] }}{% endif %}
         </div>
       </div>
-      {% if g.user['id'] == post['author_id'] and not post['edited_by_moderator'] %}
+      {% if g.user.id == post['author_id'] and not post['edited_by_moderator'] %}
         <a class="action" href="{{ url_for('blog.update', id=post['id']) }}" title="Отредактировать">✎</a>
       {% endif %}
-      {% if g.user['is_moderator'] and g.user['id'] != post['author_id'] %}
+      {% if g.user.is_moderator and g.user.id != post['author_id'] %}
         <a class="action" href="{{ url_for('blog.update', id=post['id']) }}" title="Модерировать">Мод.</a>
       {% endif %}
     </header>

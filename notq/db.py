@@ -1,17 +1,28 @@
-import sqlite3
+from sqlalchemy import create_engine, insert, text
 
 import click
 from flask import current_app, g
 
+from notq.db_structure import db_metadata, user_table
+
+g_engine = None
+
 def get_db():
+    global g_engine
+    if not g_engine:
+        g_engine = create_engine(f"sqlite+pysqlite:///{current_app.config['DATABASE']}")
     if 'db' not in g:
-        g.db = sqlite3.connect(
-            current_app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row
+        g.db = g_engine.connect()
 
     return g.db
+
+def db_execute(query, **kwargs):
+    return get_db().execute(text(query), kwargs)
+
+def db_execute_commit(query, **kwargs):
+    db = get_db()
+    db.execute(text(query), kwargs)
+    db.commit()
 
 def close_db(e=None):
     db = g.pop('db', None)
@@ -20,11 +31,12 @@ def close_db(e=None):
         db.close()
 
 def init_db():
-    db = get_db()
-
-    with current_app.open_resource('schema.sql') as f:
-        db.executescript(f.read().decode('utf8'))
-
+    global g_engine
+    g_engine = create_engine(f"sqlite+pysqlite:///{current_app.config['DATABASE']}")
+    db_metadata.create_all(g_engine)
+    db = g_engine.connect()
+    db.execute(insert(user_table).values(username='anonymous',password=''))
+    db.commit()
 
 @click.command('init-db')
 def init_db_command():

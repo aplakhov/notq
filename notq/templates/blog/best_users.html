@@ -22,7 +22,7 @@
         {% for user in users %}
         <tr>
         <td style="text-align:center">{{ user['rank'] }}.</td>
-        {% set selected = (g.user and g.user['username'] == user['username']) %}
+        {% set selected = (g.user and g.user.username == user['username']) %}
         <td>{%if selected%}<b>{%endif%}{% set userdata=user %}{% include 'user.html' %}{%if selected%}</b>{%endif%}</a>
         <td style="text-align:center">{{ user['karma'] }}</td>
         </tr>

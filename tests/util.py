@@ -1,4 +1,4 @@
-from notq.db import get_db
+from notq.db import db_execute_commit
 
 def register_and_login(client, username, password):
     assert client.get('/auth/register').status_code == 200
@@ -34,20 +34,14 @@ def check_page_contains_several(client, url, fragments):
             print(what)
         assert what.encode() in response.data
 
+def check_forbidden_action(client, url, data=None):
+    response = client.post(url, data=data)
+    assert response.status_code == 403 or (response.status_code == 302 and response.headers["Location"] == '/auth/login')
+
 def become_moderator(app, username):
     with app.app_context():
-        db = get_db()
-        db.execute(
-            "UPDATE user SET is_moderator=1 WHERE username = ?",
-            (username,)
-        )
-        db.commit()
+        db_execute_commit("UPDATE user SET is_moderator=1 WHERE username = :u", u=username)
 
 def make_user_golden(app, username):
     with app.app_context():
-        db = get_db()
-        db.execute(
-            "UPDATE user SET is_golden=1 WHERE username = ?",
-            (username,)
-        )
-        db.commit()
+        db_execute_commit("UPDATE user SET is_golden=1 WHERE username = :u", u=username)

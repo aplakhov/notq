@@ -1,5 +1,6 @@
 import pytest
 from notq.db import get_db
+from sqlalchemy import text
 
 def test_register(client, app):
     assert client.get('/auth/register').status_code == 200
@@ -10,13 +11,16 @@ def test_register(client, app):
 
     with app.app_context():
         assert get_db().execute(
-            "SELECT * FROM user WHERE username = 'abc'",
+            text("SELECT * FROM user WHERE username = 'abc'"),
         ).fetchone() is not None
+        assert get_db().execute(
+            text("SELECT * FROM user WHERE username = 'def'"),
+        ).fetchone() is None
 
 
 def test_register_bad_username(client):
     response = client.post('/auth/register', data={'username': 'SuperModerator', 'password': 'a'})
-    assert 'Это имя нельзя зарегистрировать' in response.data.decode()
+    assert 'Такое имя нельзя зарегистрировать' in response.data.decode()
 
 
 def test_register_twice(client):

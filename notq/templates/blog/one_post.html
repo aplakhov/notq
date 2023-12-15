@@ -24,7 +24,7 @@
     </script>
     {% for comment in post['comments'] recursive %}{% if comment['page'] == pager['page'] %}
       <details {% if not comment['closed'] %}open="1"{% endif %} id="answer{{ comment['id'] }}">
-        <summary class="{% if g.user and g.user['id'] == comment['author_id'] %}thiscommentheader{% else %}commentheader{% endif %}">
+        <summary class="{% if g.user and g.user.id == comment['author_id'] %}thiscommentheader{% else %}commentheader{% endif %}">
           <small><a class="vote" id="uvc{{comment['id']}}" {% if comment['id'] in cupvoted %} style="color: #00a000" {% endif %} onclick="votec({{post['id']}},{{comment['id']}},1,{{g.canVote}})" title="Больше такого">▲</a></small>
           <small id="nvc{{comment['id']}}" style="color:gray">{{comment['votes']}}</small>
           <small><a class="vote" id="dvc{{comment['id']}}" {% if comment['id'] in cdownvoted %} style="color: #f00000" {% endif %} onclick="votec({{post['id']}},{{comment['id']}},-1,{{g.canVote}})" title="Меньше такого">▼</a></small>
@@ -32,7 +32,7 @@
           <small style="color:gray">{% if comment['edited'] %}изменено {{ comment['edited'] }}{% else %}{{ comment['created' ]}}{% endif %}</small>
         </summary>
         {{comment['rendered']|safe}}
-        {% if (g.user['id'] == comment['author_id'] or g.user['is_moderator']) and not comment['edited_by_moderator'] %}
+        {% if (g.user.id == comment['author_id'] or g.user.is_moderator) and not comment['edited_by_moderator'] %}
         <a href="{{ url_for('blog.updatecomment', post_id=post['id'], comment_id=comment['id']) }}" class="smallaction">✎</a>
         {% endif %}
         <small><a class="inlineaction" href="#" onclick="addanswermenu(this,{{ post['id'] }},{{ comment['id'] }},{{g.canVote}})">ответить</a></small>        

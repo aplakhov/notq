@@ -1,5 +1,10 @@
 import functools
 import re
+
+from notq.db_structure import *
+from sqlalchemy import insert, select
+from sqlalchemy.exc import IntegrityError
+
 from notq.karma import get_user_karma
 
 from flask import (
@@ -16,14 +21,13 @@ def do_login(username, password):
         error = True
     else:
         db = get_db()
-        user = db.execute(
-            'SELECT * FROM user WHERE username = ?', (username,)
-        ).fetchone()
-        error = (user is None) or (not check_password_hash(user['password'], password))
+        query = select(user_table.c.id, user_table.c.password).where(user_table.c.username == username)
+        user = db.execute(query).fetchone()
+        error = (user is None) or (not check_password_hash(user[1], password))
 
     if not error:
         session.clear()
-        session['user_id'] = user['id']
+        session['user_id'] = user[0]
         return redirect(url_for('index'))
 
     flash('Неверное имя пользователя или пароль. Возможно, вы имели в виду "correct horse battery staple"?')
@@ -66,12 +70,9 @@ def register():
 
         if error is None:
             try:
-                db.execute(
-                    "INSERT INTO user (username, password) VALUES (?, ?)",
-                    (username, generate_password_hash(password)),
-                )
+                db.execute(insert(user_table).values(username=username, password=generate_password_hash(password)))
                 db.commit()
-            except db.IntegrityError:
+            except IntegrityError:
                 error = f"Пользователь {username} уже зарегистрирован."
             else:
                 return do_login(username, password)
@@ -97,10 +98,9 @@ def load_logged_in_user():
         g.karma = None
         g.canVote = 0
     else:
-        g.user = get_db().execute(
-            'SELECT * FROM user WHERE id = ?', (user_id,)
-        ).fetchone()
-        g.karma = get_user_karma(g.user['username'])
+        query = select(user_table).where(user_table.c.id == user_id)
+        g.user = get_db().execute(query).fetchone()
+        g.karma = get_user_karma(g.user.username)
         g.canVote = 1
 
 @bp.route('/logout')

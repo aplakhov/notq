@@ -1,57 +1,57 @@
 from collections import defaultdict
 from notq.cache import cache
-from notq.db import get_db
+from sqlalchemy import text
+from notq.db import db_execute, get_db
 from notq.data_model import get_starting_date
 
 @cache.memoize(timeout=30)
 def get_user_karma(username):
     db = get_db()
-    posts = db.execute(
+    posts = db.execute(text(
         'SELECT SUM(v.karma_vote) AS votes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE username == ? AND p.author_id != v.user_id', (username,)
+        ' WHERE username == :username AND p.author_id != v.user_id'), {"username": username}
     ).fetchone()
-    comments = db.execute(
+    comments = db.execute(text(
         'SELECT SUM(v.karma_vote) AS votes'
         ' FROM comment c JOIN user u ON c.author_id = u.id'
         ' JOIN commentvote v ON v.comment_id = c.id'
-        ' WHERE username == ? AND c.author_id != v.user_id', (username,)
+        ' WHERE username == :username AND c.author_id != v.user_id'), {"username": username}
     ).fetchone()
-    pv = posts['votes'] or 0
-    cv = comments['votes'] or 0
+    pv = posts.votes or 0
+    cv = comments.votes or 0
     return int(pv + cv // 3)
 
 @cache.memoize(timeout=60)
 def get_best_users(period):
     start = get_starting_date(period)
-    db = get_db()
     userkarma = defaultdict(float)
     is_golden = defaultdict(bool)
-    posts = db.execute(
+    posts = db_execute(
         'SELECT SUM(v.karma_vote) AS votes, u.id, username, is_golden'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE p.created > ? AND p.author_id != v.user_id'
-        ' GROUP BY u.id', (start,)
+        ' WHERE p.created > :since AND p.author_id != v.user_id'
+        ' GROUP BY u.id', since=start
     ).fetchall()
     for p in posts:
-        if p['id'] != 1: #not anomymous
-            userkarma[p['username']] += p['votes']
-        if p['is_golden']:
-            is_golden[p['username']] = True
-    comments = db.execute(
+        if p.id != 1: #not anomymous
+            userkarma[p.username] += p.votes
+        if p.is_golden:
+            is_golden[p.username] = True
+    comments = db_execute(
         'SELECT SUM(v.karma_vote) AS votes, u.id, username, is_golden'
         ' FROM comment c JOIN user u ON c.author_id = u.id'
         ' JOIN commentvote v ON v.comment_id = c.id'
-        ' WHERE c.created > ? AND c.author_id != v.user_id'
-        ' GROUP BY u.id', (start,)
+        ' WHERE c.created > :since AND c.author_id != v.user_id'
+        ' GROUP BY u.id', since=start
     ).fetchall()
     for c in comments:
-        if c['id'] != 1: #not anomymous
-            userkarma[c['username']] += c['votes'] / 3
-        if c['is_golden']:
-            is_golden[c['username']] = True
+        if c.id != 1: #not anomymous
+            userkarma[c.username] += c.votes / 3
+        if c.is_golden:
+            is_golden[c.username] = True
     for u in userkarma:
         userkarma[u] = int(userkarma[u])
     users = [

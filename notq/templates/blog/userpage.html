@@ -16,7 +16,7 @@
       <div class="middle"><h1 class="bigusername">{{ name }}</h1></div>
     </header>
     {% if black_logo %}<div><a href="#" style="color:#242f33"><img src="{{url_for('static', filename='gold.png')}}"/>&nbsp;ценный пользователь</a></div>{% endif %}
-    {% if g.user and g.user['username'] == name %}
+    {% if g.user and g.user.username == name %}
     <div style="background-color: #f0f0f0">это вы (<a href="/auth/logout">разлогиниться</a>)</div>
     {% endif %}
     {% if not pager or not pager['page'] %}
@@ -27,7 +27,7 @@
       {% if user['banned'] %}
       <p class='moderated'>Лишен слова до {{user['banned']}}</p>
       {% endif %}
-      {% if g.user and g.user['is_moderator'] and g.user['username'] != name %}
+      {% if g.user and g.user.is_moderator and g.user.username != name %}
       {% if not user['banned'] %}
       <a onclick="return confirm('Забанить на день?')" href="/u/{{name}}/ban/day">Забанить на день</a>
       |
@@ -47,7 +47,7 @@
   <hr>
 
 {% if not pager or not pager['page'] %}
-  {% if g.user and g.user['is_moderator'] and g.user['username'] != name and comments %}
+  {% if g.user and g.user.is_moderator and g.user.username != name and comments %}
   <article class="post">
     <h1>Последние комментарии пользователя</h1><p class="body"></p>
   </article>
@@ -58,7 +58,7 @@
   <article class="post">
     <header>
       <div class="middle"><h1>💬 О себе</h1></div>
-      {% if g.user and g.user['username'] == name %}
+      {% if g.user and g.user.username == name %}
       <a class="action" href="{{ url_for('blog.about') }}" title="Отредактировать">✎</a>
       {% endif %}
     </header>
