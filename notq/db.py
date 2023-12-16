@@ -10,7 +10,7 @@ g_engine = None
 def get_db():
     global g_engine
     if not g_engine:
-        g_engine = create_engine(f"sqlite+pysqlite:///{current_app.config['DATABASE']}")
+        g_engine = create_engine(current_app.config['DATABASE'])
     if 'db' not in g:
         g.db = g_engine.connect()
 
@@ -32,7 +32,7 @@ def close_db(e=None):
 
 def init_db():
     global g_engine
-    g_engine = create_engine(f"sqlite+pysqlite:///{current_app.config['DATABASE']}")
+    g_engine = create_engine(current_app.config['DATABASE'])
     db_metadata.create_all(g_engine)
     db = g_engine.connect()
     db.execute(insert(user_table).values(username='anonymous',password=''))

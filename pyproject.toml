@@ -8,7 +8,8 @@ dependencies = [
     "html-sanitizer",
     "Flask-Caching",
     "Pygments",
-    "SQLAlchemy"
+    "SQLAlchemy",
+    "psycopg2"
 ]
 
 [build-system]
