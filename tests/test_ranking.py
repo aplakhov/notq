@@ -1,4 +1,5 @@
 from tests.util import *
+import time
  
 def check_page_contains_ordered(client, url, fragments):
     response = client.get(url)
@@ -13,9 +14,13 @@ def check_page_contains_ordered(client, url, fragments):
 def test_posts_ranking(client):
     register_and_login(client, 'abc', 'a')
 
+    # sleeps are needed to ensure 'new' ranking
     make_post(client, 'post1', 'content1')
+    time.sleep(1)
     make_post(client, 'post2', 'content2')
+    time.sleep(1)
     make_post(client, 'post3', 'content3')
+    time.sleep(1)
     make_post(client, 'post4', 'content4')
 
     # novote on post1, downvote post2
