@@ -40,8 +40,8 @@ def check_forbidden_action(client, url, data=None):
 
 def become_moderator(app, username):
     with app.app_context():
-        db_execute_commit("UPDATE user SET is_moderator=1 WHERE username = :u", u=username)
+        db_execute_commit("UPDATE notquser SET is_moderator=1 WHERE username = :u", u=username)
 
 def make_user_golden(app, username):
     with app.app_context():
-        db_execute_commit("UPDATE user SET is_golden=1 WHERE username = :u", u=username)
+        db_execute_commit("UPDATE notquser SET is_golden=1 WHERE username = :u", u=username)

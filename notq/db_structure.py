@@ -2,7 +2,7 @@ from sqlalchemy import Boolean, ForeignKey, MetaData, Table, Column, Integer, Fl
 
 db_metadata = MetaData()
 
-user_table = Table('user', db_metadata, 
+user_table = Table('notquser', db_metadata, 
                    Column('id', Integer, primary_key=True),
                    Column('username', String, unique=True, nullable=False),
                    Column('password', String, nullable=False),
@@ -17,7 +17,7 @@ Index("idx_user_name", user_table.c.username)
 
 post_table = Table('post', db_metadata,
                    Column('id', Integer, primary_key=True),
-                   Column('author_id', Integer, ForeignKey('user.id'), nullable=False),
+                   Column('author_id', Integer, ForeignKey('notquser.id'), nullable=False),
                    Column('created', DateTime(), server_default=func.now()),
                    Column('edited', DateTime()),
                    Column('title', String, nullable=False),
@@ -32,7 +32,7 @@ Index("idx_post_created", post_table.c.created)
 Index("idx_post_author", post_table.c.author_id)
 
 vote_table = Table('vote', db_metadata,
-                   Column('user_id', Integer, ForeignKey('user.id'), nullable=False),
+                   Column('user_id', Integer, ForeignKey('notquser.id'), nullable=False),
                    Column('post_id', Integer, ForeignKey('post.id'), nullable=False),
                    Column('vote', Integer, nullable=False),
                    Column('weighted_vote', Integer, nullable=False),
@@ -42,7 +42,7 @@ vote_table = Table('vote', db_metadata,
 
 comment_table = Table('comment', db_metadata,
                    Column('id', Integer, primary_key=True),
-                   Column('author_id', Integer, ForeignKey('user.id'), nullable=False),
+                   Column('author_id', Integer, ForeignKey('notquser.id'), nullable=False),
                    Column('created', DateTime(), server_default=func.now()),
                    Column('edited', DateTime()),
                    Column('body', String, nullable=False),
@@ -57,7 +57,7 @@ Index("idx_comment_post", comment_table.c.post_id)
 Index("idx_comment_author", post_table.c.author_id)
 
 commentvote_table = Table('commentvote', db_metadata,
-                        Column('user_id', Integer, ForeignKey('user.id'), nullable=False),
+                        Column('user_id', Integer, ForeignKey('notquser.id'), nullable=False),
                         Column('post_id', Integer, ForeignKey('post.id'), nullable=False),
                         Column('comment_id', Integer, ForeignKey('comment.id'), nullable=False),
                         Column('vote', Integer, nullable=False),

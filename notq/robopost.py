@@ -6,13 +6,13 @@ from notq.blog import do_create_post
 from werkzeug.security import generate_password_hash, check_password_hash
 
 def post_one(title, body, creation_time, username, password):
-    user = db_execute('SELECT * FROM user WHERE username=:u', u=username).fetchone()
+    user = db_execute('SELECT * FROM notquser WHERE username=:u', u=username).fetchone()
     if not user:
         db_execute_commit(
-            "INSERT INTO user (username, password, created) VALUES (:u, :p, :c)",
+            "INSERT INTO notquser (username, password, created) VALUES (:u, :p, :c)",
             u=username, p=generate_password_hash(password), c=creation_time
         )
-        user = db_execute('SELECT * FROM user WHERE username=:u', u=username).fetchone()
+        user = db_execute('SELECT * FROM notquser WHERE username=:u', u=username).fetchone()
     elif not check_password_hash(user.password, password):
         raise RuntimeError("Wrong password")
     

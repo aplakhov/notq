@@ -137,7 +137,7 @@ def userpage(username, page):
                                  user=user, name=username, comments=comments, black_logo=is_golden)
 
 def do_ban_user(until, username):
-    db_execute_commit('UPDATE user SET banned_until=:t WHERE username=:u', t=until, u=username)
+    db_execute_commit('UPDATE notquser SET banned_until=:t WHERE username=:u', t=until, u=username)
 
 @bp.route('/u/<username>/ban/<period>')
 def ban_user(username, period):
@@ -185,7 +185,7 @@ def unban_user(username):
     if not g.user or not g.user.is_moderator:
         abort(403)
 
-    db_execute_commit('UPDATE user SET banned_until=:t WHERE username=:u', t=None, u=username)
+    db_execute_commit('UPDATE notquser SET banned_until=:t WHERE username=:u', t=None, u=username)
 
     flash("User " + username + " was unbanned")
     return redirect(url_for('blog.userpage', username=username))
@@ -306,7 +306,7 @@ def create():
 def get_post_to_update(id):
     post = db_execute(
         'SELECT p.id, title, body, p.created, author_id, username, edited_by_moderator'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' FROM post p JOIN notquser u ON p.author_id = u.id'
         ' WHERE p.id = :p', p=id).fetchone()
 
     if post is None:
@@ -344,7 +344,7 @@ def about():
                 # set this post as an "about" post
                 post = db_execute('SELECT id FROM post WHERE author_id=:a ORDER BY created DESC LIMIT 1', a=author_id).fetchone()
                 if post:
-                    db_execute_commit('UPDATE user SET about_post_id = :p WHERE id = :u', p=post.id, u=g.user.id)
+                    db_execute_commit('UPDATE notquser SET about_post_id = :p WHERE id = :u', p=post.id, u=g.user.id)
             else:
                 # update an old post
                 db_execute_commit('UPDATE post SET body=:b, rendered=:r WHERE id=:p', b=body, r=rendered, p=g.user.about_post_id)
@@ -390,7 +390,7 @@ def update(id):
 def get_comment_to_update(id):
     comment = db_execute(
         'SELECT c.id, body, c.created, author_id, username, edited_by_moderator'
-        ' FROM comment c JOIN user u ON c.author_id = u.id'
+        ' FROM comment c JOIN notquser u ON c.author_id = u.id'
         ' WHERE c.id=:c', c=id).fetchone()
 
     if comment is None:

@@ -192,10 +192,10 @@ def get_anon_posts():
 
 def get_user_stats(username):
     user_posts = db_execute(
-        'SELECT COUNT(*) AS n FROM post p JOIN user u ON p.author_id = u.id'
+        'SELECT COUNT(*) AS n FROM post p JOIN notquser u ON p.author_id = u.id'
         ' WHERE username=:u', u=username).fetchone()
     user_comments = db_execute(
-        'SELECT COUNT(*) AS n FROM comment c JOIN user u ON c.author_id = u.id'
+        'SELECT COUNT(*) AS n FROM comment c JOIN notquser u ON c.author_id = u.id'
         ' WHERE username=:u', u=username).fetchone()
     userdata = get_db().execute(select(user_table).where(user_table.c.username == username)).fetchone()
     if userdata is None:
@@ -211,7 +211,7 @@ def get_about_post(username):
         about_post_id = g.user.about_post_id
     elif username:
         userdata = db_execute(
-            'SELECT about_post_id FROM user WHERE username = :u', u=username
+            'SELECT about_post_id FROM notquser WHERE username = :u', u=username
         ).fetchone()
         if userdata:
             about_post_id = userdata.about_post_id
@@ -452,7 +452,7 @@ def delete_user_comments(since, username):
     comments_data = db_execute(
         '''
         SELECT c.id, c.author_id, c.post_id, u.username
-        FROM comment c JOIN user u ON c.author_id = u.id
+        FROM comment c JOIN notquser u ON c.author_id = u.id
         WHERE u.username == :u AND c.created > :c
         ''', u=username, c=since
     ).fetchall()
@@ -461,7 +461,7 @@ def delete_user_comments(since, username):
 
 
 def delete_user_posts(username):
-    id = db_execute('SELECT id FROM user WHERE username=:u', u=username).fetchone().id
+    id = db_execute('SELECT id FROM notquser WHERE username=:u', u=username).fetchone().id
     db_execute_commit('DELETE FROM post WHERE author_id=:a', a=id)
 
 

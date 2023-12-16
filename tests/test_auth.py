@@ -11,10 +11,10 @@ def test_register(client, app):
 
     with app.app_context():
         assert get_db().execute(
-            text("SELECT * FROM user WHERE username = 'abc'"),
+            text("SELECT * FROM notquser WHERE username = 'abc'"),
         ).fetchone() is not None
         assert get_db().execute(
-            text("SELECT * FROM user WHERE username = 'def'"),
+            text("SELECT * FROM notquser WHERE username = 'def'"),
         ).fetchone() is None
 
 

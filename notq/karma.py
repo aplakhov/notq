@@ -9,13 +9,13 @@ def get_user_karma(username):
     db = get_db()
     posts = db.execute(text(
         'SELECT SUM(v.karma_vote) AS votes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' FROM post p JOIN notquser u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' WHERE username == :username AND p.author_id != v.user_id'), {"username": username}
     ).fetchone()
     comments = db.execute(text(
         'SELECT SUM(v.karma_vote) AS votes'
-        ' FROM comment c JOIN user u ON c.author_id = u.id'
+        ' FROM comment c JOIN notquser u ON c.author_id = u.id'
         ' JOIN commentvote v ON v.comment_id = c.id'
         ' WHERE username == :username AND c.author_id != v.user_id'), {"username": username}
     ).fetchone()
@@ -30,7 +30,7 @@ def get_best_users(period):
     is_golden = defaultdict(bool)
     posts = db_execute(
         'SELECT SUM(v.karma_vote) AS votes, u.id, username, is_golden'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' FROM post p JOIN notquser u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
         ' WHERE p.created > :since AND p.author_id != v.user_id'
         ' GROUP BY u.id', since=start
@@ -42,7 +42,7 @@ def get_best_users(period):
             is_golden[p.username] = True
     comments = db_execute(
         'SELECT SUM(v.karma_vote) AS votes, u.id, username, is_golden'
-        ' FROM comment c JOIN user u ON c.author_id = u.id'
+        ' FROM comment c JOIN notquser u ON c.author_id = u.id'
         ' JOIN commentvote v ON v.comment_id = c.id'
         ' WHERE c.created > :since AND c.author_id != v.user_id'
         ' GROUP BY u.id', since=start
