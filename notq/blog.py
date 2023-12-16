@@ -244,7 +244,7 @@ def check_post(title, body):
         return 'Пост слишком длинный. Попробуйте разбить его на несколько частей'
     return None
 
-def do_create_post(title, body, user, anon, paranoid, creation_time=datetime.now()):
+def do_create_post(title, body, user, anon, paranoid, creation_time=None):
     rendered = make_html(body)
     cut = autocut(body, AUTOCUT_POST_HEIGHT, False)
     if cut and cut != body:
@@ -255,6 +255,8 @@ def do_create_post(title, body, user, anon, paranoid, creation_time=datetime.now
     if paranoid:
         author_id = 1 # anonymous
         anon = True
+    if not creation_time:
+        creation_time = datetime.now()
 
     db = get_db()
     db.execute(insert(post_table).values(
