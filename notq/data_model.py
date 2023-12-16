@@ -21,9 +21,9 @@ def get_user_votes_for_posts(user_id):
 @cache.cached(timeout=12)
 def get_posts_comments_number():
     ncomments = db_execute(
-        'SELECT post_id, COUNT(*) AS ncomments FROM post p JOIN comment c ON c.post_id == p.id GROUP BY p.id'
+        'SELECT p.id, COUNT(*) AS ncomments FROM post p JOIN comment c ON c.post_id = p.id GROUP BY p.id'
     ).fetchall()
-    res = { nc.post_id : nc.ncomments for nc in ncomments }
+    res = { nc.id : nc.ncomments for nc in ncomments }
     return res
 
 def make_comments_string(n):
@@ -113,7 +113,7 @@ def select_posts_with_votes():
     )
     query = query.join(user_table, user_table.c.id==post_table.c.author_id)
     query = query.join(vote_table, vote_table.c.post_id==post_table.c.id)
-    query = query.group_by(post_table.c.id)
+    query = query.group_by(post_table.c.id, user_table.c.id)
     return query
 
 @cache.cached(timeout=10)
@@ -163,7 +163,6 @@ def get_best_posts(period):
 def get_user_posts(username):
     query = select_posts_with_votes().where(user_table.c.username==username, ~post_table.c.anon)
     query = query.order_by(post_table.c.created.desc()).limit(500)
-    print(query)
     user_posts = get_db().execute(query).fetchall()
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in user_posts]
@@ -270,7 +269,7 @@ def select_comments_with_votes():
     query = query.join(user_table, user_table.c.id==comment_table.c.author_id)
     query = query.join(post_table, post_table.c.id==comment_table.c.post_id)
     query = query.join(commentvote_table, commentvote_table.c.comment_id==comment_table.c.id)
-    query = query.group_by(comment_table.c.id)
+    query = query.group_by(comment_table.c.id, post_table.c.id, user_table.c.id)
     return query
 
 @cache.memoize(timeout=60)

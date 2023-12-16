@@ -6,18 +6,17 @@ from notq.data_model import get_starting_date
 
 @cache.memoize(timeout=30)
 def get_user_karma(username):
-    db = get_db()
-    posts = db.execute(text(
+    posts = db_execute(
         'SELECT SUM(v.karma_vote) AS votes'
         ' FROM post p JOIN notquser u ON p.author_id = u.id'
         ' JOIN vote v ON v.post_id = p.id'
-        ' WHERE username == :username AND p.author_id != v.user_id'), {"username": username}
+        ' WHERE username=:u AND p.author_id != v.user_id', u=username
     ).fetchone()
-    comments = db.execute(text(
+    comments = db_execute(
         'SELECT SUM(v.karma_vote) AS votes'
         ' FROM comment c JOIN notquser u ON c.author_id = u.id'
         ' JOIN commentvote v ON v.comment_id = c.id'
-        ' WHERE username == :username AND c.author_id != v.user_id'), {"username": username}
+        ' WHERE username=:u AND c.author_id != v.user_id', u=username
     ).fetchone()
     pv = posts.votes or 0
     cv = comments.votes or 0

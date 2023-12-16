@@ -8,8 +8,8 @@ user_table = Table('notquser', db_metadata,
                    Column('password', String, nullable=False),
                    Column('created', DateTime(), server_default=func.now()),
                    Column('about', String),
-                   Column('is_golden', Boolean, nullable=False, default=False),
-                   Column('is_moderator', Boolean, nullable=False, default=False),
+                   Column('is_golden', Boolean, default=False),
+                   Column('is_moderator', Boolean, default=False),
                    Column('banned_until', DateTime()),
                    Column('about_post_id', Integer, ForeignKey('post.id'))
                    )

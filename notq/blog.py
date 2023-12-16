@@ -341,7 +341,7 @@ def about():
                 db_execute(
                     'INSERT INTO post (title, body, rendered, author_id, show_in_feed)'
                     ' VALUES (:t, :b, :r, :a, :show)',
-                    t=title, b=body, r=rendered, a=author_id, show=0
+                    t=title, b=body, r=rendered, a=author_id, show=False
                 )
                 # set this post as an "about" post
                 post = db_execute('SELECT id FROM post WHERE author_id=:a ORDER BY created DESC LIMIT 1', a=author_id).fetchone()
