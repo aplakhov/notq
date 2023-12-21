@@ -520,12 +520,15 @@ def addcomment():
         if as_separate_post:
             parent_post = get_posts_by_id(post_id)
             if len(parent_post) > 0:
-                title = parent_post[0]['title']
-                if 'Ответ на запись ' not in title:
-                    title = f'Ответ на запись "{title}"'
+                parent_title = parent_post[0]['title']
+                if 'Ответ на запись ' not in parent_title:
+                    answer_title = f'Ответ на запись "{parent_title}"'
+                else:
+                    answer_title = parent_title
             else:
-                title = "Ответ"
-            _, answer_id = do_create_post(title, f'> [{title}](/{post_id})\n\n' + text, g.user, anon, paranoid)
+                parent_title = "Исходная запись"
+                answer_title = "Ответ на запись"
+            _, answer_id = do_create_post(answer_title, f'> [{parent_title}](/{post_id})\n\n' + text, g.user, anon, paranoid)
             cut_text = autocut(text, AUTOCUT_COMMENT_HEIGHT, True)
             if (cut_text == text) or (answer_id is None):
                 return do_create_comment(text, post_id, parent_id, anon, paranoid, answer_id)
