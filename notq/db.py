@@ -33,6 +33,7 @@ def close_db(e=None):
 def init_db():
     global g_engine
     g_engine = create_engine(current_app.config['DATABASE'])
+    db_metadata.drop_all(g_engine)
     db_metadata.create_all(g_engine)
     db = g_engine.connect()
     db.execute(insert(user_table).values(username='anonymous',password=''))

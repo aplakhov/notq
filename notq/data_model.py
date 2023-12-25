@@ -452,7 +452,7 @@ def delete_user_comments(since, username):
         '''
         SELECT c.id, c.author_id, c.post_id, u.username
         FROM comment c JOIN notquser u ON c.author_id = u.id
-        WHERE u.username == :u AND c.created > :c
+        WHERE u.username = :u AND c.created > :c
         ''', u=username, c=since
     ).fetchall()
     for c in comments_data:

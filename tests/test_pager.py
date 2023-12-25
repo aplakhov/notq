@@ -41,7 +41,14 @@ def test_comments_pager(client):
 def test_nested_comments_pager(client):
     register_and_login(client, 'postuser', 'a')
     make_post(client, 'post0', 'postcontent')
-    for n in range(POST_COMMENTS_PAGE_SIZE * 3 // 2):
-        register_and_login(client, f'user{n}', 'a')
-        client.post('/addcomment', data={'parentpost':1, 'parentcomment': n // 4, 'text': f'comment{n}'})
+
+    register_and_login(client, 'topcommentuser', 'b')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment': 0, 'text': f'comment1'})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment': 0, 'text': f'comment2'})
+
+    for parent in [1, 2]:
+        for n in range(POST_COMMENTS_PAGE_SIZE):
+            cn = parent * POST_COMMENTS_PAGE_SIZE + n
+            register_and_login(client, f'user{cn}', 'a')
+            client.post('/addcomment', data={'parentpost':1, 'parentcomment': parent, 'text': f'comment{cn}'})
     check_exactly_2_pages_comments_pager(client)
