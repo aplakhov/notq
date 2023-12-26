@@ -5,7 +5,7 @@ from notq.db import db_execute, db_execute_commit
 from notq.blog import do_create_post
 from werkzeug.security import generate_password_hash, check_password_hash
 
-def post_one(title, body, creation_time, username, password):
+def post_one(title, body, creation_time, username, password, anon):
     user = db_execute('SELECT * FROM notquser WHERE username=:u', u=username).fetchone()
     if not user:
         db_execute_commit(
@@ -16,7 +16,7 @@ def post_one(title, body, creation_time, username, password):
     elif not check_password_hash(user.password, password):
         raise RuntimeError("Wrong password")
     
-    do_create_post(title, body, user, anon=False, paranoid=False, creation_time=creation_time)
+    do_create_post(title, body, user, anon=anon, paranoid=False, creation_time=creation_time)
 
 def dt(s):
     return datetime.datetime.strptime(s, r'%d-%m-%Y')
@@ -27,7 +27,8 @@ def dt(s):
 @click.option('-p', '--password')
 @click.option('-s', '--starting-date')
 @click.option('-f', '--daily-frequency', type=int)
-def robopost_command(filename, user, password, starting_date, daily_frequency):
+@click.option('-a', '--anon', is_flag=True, default=False)
+def robopost_command(filename, user, password, starting_date, daily_frequency, anon):
     '''Post everything from FILENAME. 1 json per line, expected fields are 'title', 'text'.'''
 
     creation_time = dt(starting_date)
@@ -42,7 +43,7 @@ def robopost_command(filename, user, password, starting_date, daily_frequency):
     
     for l in lines:
         post = json.loads(l.strip())
-        post_one(post['title'], post['body'], creation_time, user, password)
+        post_one(post['title'], post['body'], creation_time, user, password, anon)
         creation_time += posting_timedelta
 
     click.echo(f'Posted everything from {filename}.')
