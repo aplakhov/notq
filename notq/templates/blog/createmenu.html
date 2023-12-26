@@ -1,0 +1,1 @@
+<a class="navlink" href="{% if g.user %}{{ url_for('blog.create') }}{% else %}{{ url_for('auth.register') }}">написать</a>{% endif %}
