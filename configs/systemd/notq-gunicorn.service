@@ -1,0 +1,14 @@
+[Unit]
+Description=Notq Application Server using Gunicorn
+After=network.target
+
+[Service]
+User=finder
+Group=www-data
+WorkingDirectory=/home/finder/notq
+Environment="PATH=/home/finder/notq/.venv/bin"
+ExecStart=/bin/bash -c 'source /home/finder/notq/.venv/bin/activate; gunicorn -w 4 -b 0.0.0.0:5000 "notq:create_app()"'
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
