@@ -10,7 +10,7 @@ class SimpleTagPattern(markdown.inlinepatterns.Pattern):
         el.text = "#" + tagname
         return el
 
-SIMPLE_TAG_REGEXP = r'#([A-Za-z0-9]+)'
+SIMPLE_TAG_REGEXP = r'[( ,]#([A-Za-z0-9]+)'
 
 class SimpleTagExtension(markdown.Extension):
     """ SimpleTag Extension for Python-Markdown. """

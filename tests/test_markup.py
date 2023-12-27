@@ -119,3 +119,10 @@ def test_tags():
     assert len(tags) == 2
     assert "math" in tags
     assert "boobs" in tags
+
+def test_url_with_anchor():
+    text = "https://en.wikipedia.org/wiki/List_of_accidents_and_disasters_by_death_toll#Space"
+    html = make_html(text)
+    assert "<a " in html
+    assert "tag" not in html
+    assert text in html
