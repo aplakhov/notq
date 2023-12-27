@@ -94,8 +94,12 @@ def login():
 def do_load_user(user_id):
     query = select(user_table).where(user_table.c.id == user_id)
     g.user = get_db().execute(query).fetchone()
-    g.karma = get_user_karma(g.user.username)
-    g.canVote = 1
+    if g.user:
+        g.karma = get_user_karma(g.user.username)
+        g.canVote = 1
+    else:
+        g.karma = None
+        g.canVote = 0
 
 @bp.before_app_request
 def load_logged_in_user():
