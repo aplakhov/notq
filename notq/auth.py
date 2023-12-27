@@ -39,7 +39,7 @@ def check_username(username):
     return usernamere.match(username)
 
 def is_disallowed_username(username):
-    if username in ['admin', 'anonymous', 'notq', 'u', 'yandex', 'mail', 'vk', 'sber']:
+    if username in ['admin', 'anonymous', 'u', 'yandex', 'mail', 'vk', 'sber', 'dzen']:
         return True
     if 'moderator' in username:
         return True

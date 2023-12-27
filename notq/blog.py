@@ -344,7 +344,7 @@ def about():
                     t=title, b=body, r=rendered, a=author_id, show=False
                 )
                 # set this post as an "about" post
-                post = db_execute('SELECT id FROM post WHERE author_id=:a ORDER BY created DESC LIMIT 1', a=author_id).fetchone()
+                post = db_execute('SELECT id FROM post WHERE author_id=:a ORDER BY id DESC LIMIT 1', a=author_id).fetchone()
                 if post:
                     db_execute_commit('UPDATE notquser SET about_post_id = :p WHERE id = :u', p=post.id, u=g.user.id)
             else:

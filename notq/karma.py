@@ -1,7 +1,6 @@
 from collections import defaultdict
 from notq.cache import cache
-from sqlalchemy import text
-from notq.db import db_execute, get_db
+from notq.db import db_execute
 from notq.data_model import get_starting_date
 
 @cache.memoize(timeout=30)
