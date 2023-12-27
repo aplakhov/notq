@@ -4,6 +4,7 @@ import click
 from notq.db import db_execute, db_execute_commit
 from notq.blog import do_create_post
 from werkzeug.security import generate_password_hash, check_password_hash
+from random import randint
 
 def post_one(title, body, creation_time, username, password, anon):
     user = db_execute('SELECT * FROM notquser WHERE username=:u', u=username).fetchone()
@@ -43,7 +44,8 @@ def robopost_command(filename, user, password, starting_date, daily_frequency, a
     
     for l in lines:
         post = json.loads(l.strip())
+        print('Posting ', post['title'])
         post_one(post['title'], post['body'], creation_time, user, password, anon)
-        creation_time += posting_timedelta
+        creation_time += posting_timedelta + datetime.timedelta(seconds=randint(-1000, 1000))
 
     click.echo(f'Posted everything from {filename}.')
