@@ -330,7 +330,7 @@ def add_page_numbers(comments):
 @cache.memoize(timeout=10)
 def get_post_comments(post_id):
     # select comments with votes from database
-    query = select_comments_with_votes().where(comment_table.c.post_id == post_id)
+    query = select_comments_with_votes().where(comment_table.c.post_id == post_id).order_by(comment_table.c.id)
     comments = get_db().execute(query).fetchall()
 
     # collect all top-level comments
