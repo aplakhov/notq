@@ -12,6 +12,7 @@ from notq.markup import make_html
 from notq.data_model import *
 from notq.karma import get_user_karma, get_best_users
 from notq.constants import *
+from notq.notify import create_answer_notify
 
 bp = Blueprint('blog', __name__)
 
@@ -493,6 +494,10 @@ def do_create_comment(text, post_id, parent_id, anon, paranoid, linked_post_id):
         add_comment_vote(author_id, is_golden, post_id, comment.id, 2)
         if not paranoid:
             anchor = "#answer" + str(comment.id)
+
+    # create a notification
+    create_answer_notify(post_id, parent_id, author_id)
+
     return redirect(url_for('blog.one_post', id=post_id) + anchor)
 
 @bp.route('/addcomment', methods=('POST',))
