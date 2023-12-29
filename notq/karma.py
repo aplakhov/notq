@@ -63,4 +63,6 @@ def get_best_users(period):
     users.sort(key = lambda u: u['karma'], reverse=True)
     for n in range(len(users)):
         users[n]['rank'] = n + 1
+        if users[n]['karma'] == 0:
+            users[n]['karma'] = "ɛ"
     return users

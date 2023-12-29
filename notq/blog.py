@@ -85,7 +85,8 @@ def add_current_user(users, all_users):
 def best_users(period):
     title = 'Лучшие пользователи ' + best_title(period)
     all_users = get_best_users(period)
-    users = all_users[:100]
+    removelist = ["robot-yachan-reposter"]
+    users = [u for u in all_users[:100] if u['username'] not in removelist]
     add_current_user(users, all_users)
     return render_template('blog/best_users.html',
                            besturl=url_for('blog.best', period=period),
