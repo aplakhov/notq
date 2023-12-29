@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Оповещения{% endblock %}
+
+{% block header %}
+  <a class="navlink" href="/">главная</a>
+  <a class="navlink" href="/new">новое</a>
+  <a class="navlink" href="/best/day">лучшее</a>
+  {% include 'blog/createmenu.html' %}
+  {% include 'blog/bestmenu.html' %}
+{% endblock %}
+
+{% block content %}
+  <article class="post">
+    <header>
+      <div class="middle"><h1 class="bigusername">Оповещения</h1></div>
+    </header>
+    {% for n in notifies %}
+      <p class="body">{% if n['active'] %}<img src="/static/bell_active_li.png"/>{% else %}<img src="/static/bell_inactive_li.png"/>{% endif %}
+      {{n['text']|safe}}</p>
+    {% endfor %}
+  </article>
+  <hr>
+  {% include 'blog/pager.html' %}
+{% endblock %}

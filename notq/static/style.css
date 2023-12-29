@@ -42,6 +42,7 @@ input[type=submit] { align-self: start; min-width: 10em; }
 
 nav a.username { color: white }
 a.username { color: #242f33; }
+a.notify { color: #242f33; }
 .post > header h1.bigusername { font-size: 3em; }
 
 .spoiler { color: #eee; background-color: #eee }

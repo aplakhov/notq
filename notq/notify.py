@@ -1,4 +1,5 @@
 from sqlalchemy import select, text
+from notq.data_model import readable_timediff
 from notq.db import get_db
 from notq.db_structure import *
 
@@ -19,7 +20,7 @@ def describe(user):
         icon = 'gold.png'
     else:
         icon = 'silver.png'
-    return f'<a class="username" href="/u/{user.username}"><img src="/static/{icon}">{user.username}</a>'
+    return f'<img src="/static/{icon}">{user.username}'
 
 def create_answer_notify(post_id, parent_id, answer_author_id):
     db = get_db()
@@ -34,11 +35,34 @@ def create_answer_notify(post_id, parent_id, answer_author_id):
         if not comment:
             return
         notify_user = comment.author_id
-        notify = f'{describe(user)} ответил на ваш комментарий к записи "{post.title}"'
+        notify_message = f'{describe(user)} ответил на ваш комментарий к записи «{post.title}»'
+        link = f'/{post_id}#answer{parent_id}'
     else:
         notify_user = post.author_id
-        notify = f'На вашу запись "{post.title}" ответил {describe(user)}'
+        notify_message = f'{describe(user)} ответил на вашу запись «{post.title}»'
+        link = f'/{post_id}#answersection'
     if notify_user != answer_author_id:
+        notify_html = f'<a class="notify" href="{link}">{notify_message}</a>'
         query = 'INSERT INTO notifies (user_id, post_id, text) VALUES(:u, :p, :t)'
-        db.execute(text(query), {'u': notify_user, 'p': post_id, 't': notify})
+        db.execute(text(query), {'u': notify_user, 'p': post_id, 't': notify_html})
         db.commit()
+
+def get_notifies(user):
+    query = select(notifies_table.c.text, notifies_table.c.created, notifies_table.c.is_read)
+    query.where(notifies_table.c.user_id == user.id).order_by(notifies_table.c.created.desc()).limit(100)
+    res = get_db().execute(query).fetchall()
+    if not res:
+        return [
+            {
+                'active': False, 
+                'text': '<a class="notify" href="/best/week">Добро пожаловать! Можете начать знакомство с сервисом с лучших постов недели</a>',
+                'created': ''
+            }
+        ]
+    return [
+        { 
+            'active': not n.is_read,
+            'text': n.text,
+            'created': readable_timediff(n.created)
+        } for n in res
+    ]

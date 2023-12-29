@@ -12,7 +12,7 @@ from notq.markup import make_html
 from notq.data_model import *
 from notq.karma import get_user_karma, get_best_users
 from notq.constants import *
-from notq.notify import create_answer_notify
+from notq.notify import create_answer_notify, get_notifies
 
 bp = Blueprint('blog', __name__)
 
@@ -546,3 +546,17 @@ def addcomment():
                 return do_create_comment(answer_text, post_id, parent_id, anon, paranoid, answer_id)
         else:
             return do_create_comment(text, post_id, parent_id, anon, paranoid, None)
+
+@bp.route('/notifies', defaults={'page': 0})
+@bp.route('/notifies/page/<int:page>')
+@login_required
+def notifies(page):
+    if not g.user:
+        abort(500)
+    ns = get_notifies(g.user)
+    pager = {
+        'numpages': 1,
+        'page': page,
+        'pageurl': '/notifies/page/'
+    }
+    return render_template("blog/notifies.html", notifies=ns, pager=pager)
