@@ -496,7 +496,10 @@ def do_create_comment(text, post_id, parent_id, anon, paranoid, linked_post_id):
             anchor = "#answer" + str(comment.id)
 
     # create a notification
-    create_answer_notify(post_id, parent_id, author_id)
+    if anon:
+        create_answer_notify(post_id, parent_id, 1)
+    else:
+        create_answer_notify(post_id, parent_id, author_id)
 
     return redirect(url_for('blog.one_post', id=post_id) + anchor)
 
