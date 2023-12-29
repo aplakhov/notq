@@ -49,7 +49,8 @@ def create_answer_notify(post_id, parent_id, answer_author_id):
 
 def get_notifies(user):
     query = select(notifies_table.c.text, notifies_table.c.created, notifies_table.c.is_read)
-    query.where(notifies_table.c.user_id == user.id).order_by(notifies_table.c.created.desc()).limit(100)
+    query = query.where(notifies_table.c.user_id == user.id)
+    query = query.order_by(notifies_table.c.created.desc()).limit(100)
     res = get_db().execute(query).fetchall()
     if not res:
         return [

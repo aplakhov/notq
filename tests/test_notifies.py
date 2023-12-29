@@ -23,11 +23,18 @@ def test_notify(client, app):
     with app.app_context():
         assert has_notifies('abc')
         assert not has_notifies('def')
+    check_page_doesnt_contain(client, '/notifies', 'ответил на вашу запись')    
+    check_page_contains(client, '/notifies', 'Добро пожаловать')
+    client.post('/auth/login', data={'username': 'abc', 'password': 'a'})
+    check_page_contains_several(client, '/notifies', ['def', 'ответил на вашу запись'])
+    
     register_and_login(client, 'ghi', 'a')
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':'comment2'})
     with app.app_context():
         assert has_notifies('def')
         assert not has_notifies('ghi')
+    client.post('/auth/login', data={'username': 'def', 'password': 'a'})
+    check_page_contains_several(client, '/notifies', ['ghi', 'ответил на ваш комментарий'])
 
 def test_notify_anon_answer(client, app):
     register_and_login(client, 'abc', 'a')
