@@ -1,8 +1,8 @@
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from heapq import nlargest
 from datetime import datetime, timedelta
 from flask import g
-from sqlalchemy import select
+from sqlalchemy import select, text
 from notq.cache import cache
 from notq.db import get_db, db_execute, db_execute_commit
 from notq.markdown_tags import collect_tags
@@ -86,11 +86,14 @@ def post_from_sql_row(p, ncomments, full_post):
         res['comments'] = get_post_comments(p.id)
     return res
 
-def top_post_scoring(post, now):
+def top_post_scoring(post, now, add_score):
     halflife = 18 * 3600
     timediff = (now - post.created).total_seconds()
     decay = halflife / (halflife + timediff)
-    return (post.weighted_votes + 4) * decay
+    result = (post.weighted_votes + 4) * decay
+    if post.id in add_score:
+        result += add_score[post.id]
+    return result
 
 def best_post_scoring(post):
     return post.weighted_votes
@@ -116,13 +119,26 @@ def select_posts_with_votes():
     query = query.group_by(post_table.c.id, user_table.c.id)
     return query
 
+@cache.cached(timeout=30)
+def calc_comment_additional_scoring(now):
+    query = "SELECT id, post_id, created FROM comment ORDER BY id DESC LIMIT 100"
+    lastcomments = get_db().execute(text(query)).fetchall()
+    res = defaultdict(float)
+    for c in lastcomments:
+        halflife = 18 * 3600
+        timediff = (now - c.created).total_seconds()
+        decay = halflife / (halflife + timediff)
+        res[c.post_id] += decay
+
 @cache.cached(timeout=10)
 def get_top_posts():
     all_posts = get_db().execute(select_posts_with_votes().order_by(post_table.c.id.desc())).fetchall()
     now = datetime.now()
     ncomments = get_posts_comments_number()
+    add_score = calc_comment_additional_scoring(now)
     top_posts = [
-        post_from_sql_row(p, ncomments, False) for p in nlargest(500, all_posts, key=lambda post: top_post_scoring(post, now))
+        post_from_sql_row(p, ncomments, False) 
+        for p in nlargest(500, all_posts, key=lambda post: top_post_scoring(post, now, add_score))
     ]
     return top_posts
 
@@ -177,9 +193,10 @@ def get_tag_posts(tagname):
     tag_posts = get_db().execute(query).fetchall()
     ncomments = get_posts_comments_number()
     now = datetime.now()
+    add_score = calc_comment_additional_scoring(now)
     top_posts = [
         post_from_sql_row(p, ncomments, False) 
-        for p in nlargest(100, tag_posts, key=lambda post: top_post_scoring(post, now))
+        for p in nlargest(100, tag_posts, key=lambda post: top_post_scoring(post, now, add_score))
     ]
     return top_posts
 
