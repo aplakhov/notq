@@ -125,7 +125,7 @@ def calc_comment_additional_scoring(now):
     lastcomments = get_db().execute(text(query)).fetchall()
     res = defaultdict(float)
     for c in lastcomments:
-        halflife = 18 * 3600
+        halflife = 2 * 3600
         timediff = (now - c.created).total_seconds()
         decay = halflife / (halflife + timediff)
         res[c.post_id] += decay
