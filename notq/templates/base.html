@@ -16,6 +16,10 @@
   <ul>
     {% if g.user %}
       <li>
+      <span><a href="/notifies">
+      {% if g.active_notifies %}<img src="{{ url_for('static', filename='bell_active.png') }}"/>
+      {% else %}<img src="{{ url_for('static', filename='bell_inactive.png') }}"/>{% endif %}
+      </a></span>
       <span title="ваша страница">{% set userdata=g.user %}{% include 'user.html' %}</span>
       <span title="ваша карма" class="navkarma">{{ g.karma }}</span>
       </li>

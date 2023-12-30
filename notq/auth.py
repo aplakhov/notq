@@ -14,6 +14,7 @@ from flask import (
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from notq.db import get_db
+from notq.notify import has_unread_notifies
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -96,6 +97,7 @@ def do_load_user(user_id):
     g.user = get_db().execute(query).fetchone()
     if g.user:
         g.karma = get_user_karma(g.user.username)
+        g.active_notifies = has_unread_notifies(g.user.id)
         g.canVote = 1
     else:
         g.karma = None

@@ -75,10 +75,9 @@ def mark_as_read(user_id, post_id):
     query = 'UPDATE notifies SET is_read=:t WHERE user_id=:u AND post_id=:p'
     db_execute_commit(query, t=True, u=user_id, p=post_id)
 
-@cache.memoize(timeout=60)
 def has_unread_notifies(user_id):
     res = db_execute(
-        'SELECT id FROM notifies WHERE user_id=:u AND is_read=FALSE',
+        'SELECT 1 FROM notifies WHERE user_id=:u AND (is_read IS NULL OR NOT is_read)',
         u=user_id
     ).fetchone()
     return res != None
