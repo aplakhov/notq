@@ -19,6 +19,9 @@ class UrlizePattern(markdown.inlinepatterns.Pattern):
             
         text = url
 
+        if url and url[0] in ' \n(':
+            url = url[1:]
+
         if 'youtube.com/watch' in url or 'youtu.be' in url:
             return None # we want to deal with youtube links in a different way
 
