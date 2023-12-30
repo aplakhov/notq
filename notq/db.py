@@ -39,7 +39,7 @@ def init_db():
     db.execute(insert(user_table).values(username='anonymous',password=''))
     db.commit()
 
-@click.command('init-db')
+@click.command('init-db-drops-all-extremely-unsafe')
 def init_db_command():
     """Clear the existing data and create new tables."""
     init_db()
