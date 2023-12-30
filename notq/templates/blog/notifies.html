@@ -17,6 +17,7 @@
     </header>
     {% for n in notifies %}
       <p class="body">{% if n['active'] %}<img src="/static/bell_active_li.png"/>{% else %}<img src="/static/bell_inactive_li.png"/>{% endif %}
+      <span class='notifymeta'>{{n['created']}}</span> 
       {{n['text']|safe}}</p>
     {% endfor %}
   </article>
