@@ -60,10 +60,12 @@ def test_notify_read_unread(client):
     client.post('/auth/login', data={'username': 'abc', 'password': 'a'})
     check_page_contains_several(client, '/notifies', ['def', 'ответил на вашу запись', 'bell_active_li'])
     check_page_doesnt_contain(client, '/notifies', 'bell_inactive_li')
+    check_page_contains(client, '/', 'bell_active.png')
 
     check_page_contains_several(client, '/1', ['title1', 'post1', 'comment1']) # read the comment
     check_page_contains_several(client, '/notifies', ['def', 'ответил на вашу запись', 'bell_inactive_li'])
     check_page_doesnt_contain(client, '/notifies', 'bell_active_li')
+    check_page_contains(client, '/', 'bell_inactive.png')
 
 def test_notify_read_all_comments(client):
     register_and_login(client, 'abc', 'a')
@@ -75,6 +77,8 @@ def test_notify_read_all_comments(client):
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3'})
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment4'})
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment5'})
+    check_page_contains(client, '/', 'bell_inactive.png')
+    check_page_contains(client, '/new', 'bell_inactive.png')
 
     register_and_login(client, 'ghi', 'a')
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':'answercomment1'})
@@ -84,7 +88,9 @@ def test_notify_read_all_comments(client):
     client.post('/auth/login', data={'username': 'def', 'password': 'a'})
     check_page_contains_several(client, '/notifies', ['ghi', 'ответил на ваш комментарий', 'bell_active_li'])
     check_page_doesnt_contain(client, '/notifies', 'bell_inactive_li')
+    check_page_contains(client, '/', 'bell_active.png')
 
     check_page_contains_several(client, '/1', ['comment1', 'comment2', 'answercomment1', 'answercomment5']) # read all comments
     check_page_contains_several(client, '/notifies', ['ghi', 'ответил на ваш комментарий', 'bell_inactive_li'])
     check_page_doesnt_contain(client, '/notifies', 'bell_active_li')
+    check_page_contains(client, '/', 'bell_inactive.png')

@@ -113,8 +113,8 @@ def test_spoilers():
 def test_tags():
     text = 'Вот несколько тэгов: #math, #boobs, и еще раз #math'
     html = make_html(text)
-    assert '<a href="/tag/math">#math</a>' in html
-    assert '<a href="/tag/boobs">#boobs</a>' in html
+    assert '<a href="/tag/math"> #math</a>' in html
+    assert '<a href="/tag/boobs"> #boobs</a>' in html
     tags = collect_tags(text)
     assert len(tags) == 2
     assert "math" in tags
