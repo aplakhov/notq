@@ -1,7 +1,9 @@
 from sqlalchemy import select, text
+from notq.cache import cache
 from notq.data_model import readable_timediff
-from notq.db import get_db
+from notq.db import db_execute, db_execute_commit, get_db
 from notq.db_structure import *
+from notq.markup import sanitizeHtml
 
 def get_user(db, user_id):
     query = select(user_table.c.username, user_table.c.is_golden).where(user_table.c.id == user_id)
@@ -30,16 +32,17 @@ def create_answer_notify(post_id, parent_id, answer_author_id):
     post = get_notify_post(db, post_id)
     if not post:
         return
+    title = sanitizeHtml(post.title)
     if parent_id:
         comment = get_notify_comment(db, post_id, parent_id)
         if not comment:
             return
         notify_user = comment.author_id
-        notify_message = f'{describe(user)} ответил на ваш комментарий к записи «{post.title}»'
+        notify_message = f'{describe(user)} ответил на ваш комментарий к записи «{title}»'
         link = f'/{post_id}#answer{parent_id}'
     else:
         notify_user = post.author_id
-        notify_message = f'{describe(user)} ответил на вашу запись «{post.title}»'
+        notify_message = f'{describe(user)} ответил на вашу запись «{title}»'
         link = f'/{post_id}#answersection'
     if notify_user != answer_author_id:
         notify_html = f'<a class="notify" href="{link}">{notify_message}</a>'
@@ -48,10 +51,10 @@ def create_answer_notify(post_id, parent_id, answer_author_id):
         db.commit()
 
 def get_notifies(user):
-    query = select(notifies_table.c.text, notifies_table.c.created, notifies_table.c.is_read)
-    query = query.where(notifies_table.c.user_id == user.id)
-    query = query.order_by(notifies_table.c.created.desc()).limit(100)
-    res = get_db().execute(query).fetchall()
+    res = db_execute(
+        'SELECT text, created, is_read FROM notifies WHERE user_id=:u ORDER BY created DESC LIMIT 100',
+        u=user.id
+    ).fetchall()
     if not res:
         return [
             {
@@ -67,3 +70,16 @@ def get_notifies(user):
             'created': readable_timediff(n.created)
         } for n in res
     ]
+
+def mark_as_read(user_id, post_id):
+    query = 'UPDATE notifies SET is_read=:t WHERE user_id=:u AND post_id=:p'
+    db_execute_commit(query, t=True, u=user_id, p=post_id)
+
+@cache.memoize(timeout=60)
+def has_unread_notifies(user_id):
+    res = db_execute(
+        'SELECT id FROM notifies WHERE user_id=:u AND is_read=FALSE',
+        u=user_id
+    ).fetchone()
+    return res != None
+ 

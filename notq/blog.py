@@ -12,7 +12,7 @@ from notq.markup import make_html
 from notq.data_model import *
 from notq.karma import get_user_karma, get_best_users
 from notq.constants import *
-from notq.notify import create_answer_notify, get_notifies
+from notq.notify import create_answer_notify, get_notifies, mark_as_read
 
 bp = Blueprint('blog', __name__)
 
@@ -204,6 +204,7 @@ def one_post(id, page):
     if g.user:
         upvoted, downvoted = get_user_votes_for_posts(g.user.id)
         cupvoted, cdownvoted = get_user_votes_for_comments(g.user.id, id)
+        mark_as_read(g.user.id, id)
     else:
         upvoted = downvoted = []
         cupvoted = cdownvoted = []

@@ -49,3 +49,42 @@ def test_notify_anon_answer(client, app):
         assert 'title1' in notify.text
         assert 'anonymous' in notify.text
         assert 'def' not in notify.text
+
+def test_notify_read_unread(client):
+    register_and_login(client, 'abc', 'a')
+    make_post(client, 'title1', 'post1')
+
+    register_and_login(client, 'def', 'a')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment1'})
+
+    client.post('/auth/login', data={'username': 'abc', 'password': 'a'})
+    check_page_contains_several(client, '/notifies', ['def', 'ответил на вашу запись', 'bell_active_li'])
+    check_page_doesnt_contain(client, '/notifies', 'bell_inactive_li')
+
+    check_page_contains_several(client, '/1', ['title1', 'post1', 'comment1']) # read the comment
+    check_page_contains_several(client, '/notifies', ['def', 'ответил на вашу запись', 'bell_inactive_li'])
+    check_page_doesnt_contain(client, '/notifies', 'bell_active_li')
+
+def test_notify_read_all_comments(client):
+    register_and_login(client, 'abc', 'a')
+    make_post(client, 'title1', 'post1')
+
+    register_and_login(client, 'def', 'a')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment1'})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment2'})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3'})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment4'})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment5'})
+
+    register_and_login(client, 'ghi', 'a')
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':'answercomment1'})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':3, 'text':'answercomment3'})
+    client.post('/addcomment', data={'parentpost':1, 'parentcomment':3, 'text':'answercomment5'})
+
+    client.post('/auth/login', data={'username': 'def', 'password': 'a'})
+    check_page_contains_several(client, '/notifies', ['ghi', 'ответил на ваш комментарий', 'bell_active_li'])
+    check_page_doesnt_contain(client, '/notifies', 'bell_inactive_li')
+
+    check_page_contains_several(client, '/1', ['comment1', 'comment2', 'answercomment1', 'answercomment5']) # read all comments
+    check_page_contains_several(client, '/notifies', ['ghi', 'ответил на ваш комментарий', 'bell_inactive_li'])
+    check_page_doesnt_contain(client, '/notifies', 'bell_active_li')
