@@ -3,11 +3,11 @@ from tests.util import *
 def test_golden_user(client, app):
     register_and_login(client, 'gld', 'a')
     make_user_golden(app, 'gld')
-    check_page_contains(client, '/', 'gold.png')
+    check_page_contains(client, '/', '<img src="/static/gold.png"/>gld')
     make_post(client, 'title1', 'post1')
     make_post(client, 'title2', 'post2', authorship='anon')
     register_and_login(client, 'def', 'a')
-    check_page_doesnt_contain(client, '/', 'gold.png')
+    check_page_doesnt_contain(client, '/', '<img src="/static/gold.png"/>def')
     check_page_contains(client, '/1', 'gold.png')
     check_page_doesnt_contain(client, '/2', 'gold.png')
 
