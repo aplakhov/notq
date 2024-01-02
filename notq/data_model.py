@@ -11,14 +11,14 @@ from notq.constants import POST_COMMENTS_PAGE_SIZE
 
 from notq.db_structure import *
 
-@cache.memoize(timeout=9)
+#@cache.memoize(timeout=9)
 def get_user_votes_for_posts(user_id):
     votes = db_execute('SELECT vote, post_id FROM vote WHERE user_id = :id', id=user_id).fetchall()
     upvoted = [v.post_id for v in votes if v.vote > 0]
     downvoted = [v.post_id for v in votes if v.vote < 0]
     return upvoted, downvoted
 
-@cache.cached(timeout=12)
+#@cache.cached(timeout=12)
 def get_posts_comments_number():
     ncomments = db_execute(
         'SELECT p.id, COUNT(*) AS ncomments FROM post p JOIN comment c ON c.post_id = p.id GROUP BY p.id'
@@ -119,7 +119,7 @@ def select_posts_with_votes():
     query = query.group_by(post_table.c.id, user_table.c.id)
     return query
 
-@cache.cached(timeout=30)
+#@cache.cached(timeout=30)
 def calc_comment_additional_scoring(now):
     query = "SELECT id, post_id, created FROM comment ORDER BY id DESC LIMIT 100"
     lastcomments = get_db().execute(text(query)).fetchall()
@@ -129,8 +129,9 @@ def calc_comment_additional_scoring(now):
         timediff = (now - c.created).total_seconds()
         decay = halflife / (halflife + timediff)
         res[c.post_id] += decay
+    return res
 
-@cache.cached(timeout=10)
+#@cache.cached(timeout=10)
 def get_top_posts():
     all_posts = get_db().execute(select_posts_with_votes().order_by(post_table.c.id.desc())).fetchall()
     now = datetime.now()
@@ -142,7 +143,7 @@ def get_top_posts():
     ]
     return top_posts
 
-@cache.cached(timeout=10)
+#@cache.cached(timeout=10)
 def get_new_posts():
     query = select_posts_with_votes().order_by(post_table.c.created.desc()).limit(500)
     new_posts = get_db().execute(query).fetchall()
@@ -163,7 +164,7 @@ def get_starting_date(period):
         start = now - timedelta(days=100*365)
     return start
 
-@cache.memoize(timeout=30)
+#@cache.memoize(timeout=30)
 def get_best_posts(period):
     start = get_starting_date(period)
     query = select_posts_with_votes().where(post_table.c.created > start)
@@ -175,7 +176,7 @@ def get_best_posts(period):
         if p.weighted_votes >= 0
     ]
 
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def get_user_posts(username):
     query = select_posts_with_votes().where(user_table.c.username==username, ~post_table.c.anon)
     query = query.order_by(post_table.c.created.desc()).limit(500)
@@ -183,7 +184,7 @@ def get_user_posts(username):
     ncomments = get_posts_comments_number()
     return [post_from_sql_row(p, ncomments, False) for p in user_posts]
 
-@cache.cached(timeout=60)
+#@cache.cached(timeout=60)
 def get_tag_posts(tagname):
     tagdata = db_execute('SELECT * FROM tag WHERE tagname = :tagname', tagname=tagname).fetchone()
     if tagdata is None:
@@ -289,7 +290,7 @@ def select_comments_with_votes():
     query = query.group_by(comment_table.c.id, post_table.c.id, user_table.c.id)
     return query
 
-@cache.memoize(timeout=60)
+#@cache.memoize(timeout=60)
 def get_best_comments(period):
     start = get_starting_date(period)
     query = select_comments_with_votes().where(comment_table.c.created > start)
@@ -306,7 +307,7 @@ def get_last_user_comments(username):
     comments_data = get_db().execute(query).fetchall()
     return [comment_from_data(c) for c in comments_data]
 
-@cache.memoize(timeout=9)
+#@cache.memoize(timeout=9)
 def get_user_votes_for_posts(user_id):
     votes = db_execute('SELECT vote, post_id FROM vote WHERE user_id = :id', id=user_id).fetchall()
     upvoted = [v.post_id for v in votes if v.vote > 0]
@@ -344,7 +345,7 @@ def add_page_numbers(comments):
             current_page += 1
             current_page_num_comments = 0
 
-@cache.memoize(timeout=10)
+#@cache.memoize(timeout=10)
 def get_post_comments(post_id):
     # select comments with votes from database
     query = select_comments_with_votes().where(comment_table.c.post_id == post_id).order_by(comment_table.c.id)
@@ -413,7 +414,7 @@ def add_comment_vote(user_id, is_golden_user, post_id, comment_id, voteparam):
             u=user_id, p=post_id, c=comment_id, v=vote, w=weighted_vote, k=karma_vote
         )
 
-@cache.memoize(timeout=10)
+#@cache.memoize(timeout=10)
 def get_posts_by_id(id):
     posts = get_db().execute(select_posts_with_votes().where(post_table.c.id == id)).fetchall()
     res = [post_from_sql_row(p, None, True) for p in posts]
@@ -424,7 +425,7 @@ def upvoted_downvoted(votes):
     downvoted = [v.comment_id for v in votes if v.vote < 0]
     return upvoted, downvoted
 
-@cache.memoize(timeout=10)
+#@cache.memoize(timeout=10)
 def get_user_votes_for_comments(user_id, post_id):
     votes = db_execute(
         'SELECT comment_id, vote FROM commentvote '
@@ -432,7 +433,7 @@ def get_user_votes_for_comments(user_id, post_id):
     ).fetchall()
     return upvoted_downvoted(votes)
 
-@cache.memoize(timeout=60)
+#@cache.memoize(timeout=60)
 def get_user_votes_for_all_comments(user_id):
     # this should probably be optimized somehow?
     votes = db_execute(

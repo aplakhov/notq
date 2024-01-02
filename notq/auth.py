@@ -91,7 +91,7 @@ def login():
         return do_login(username, password)
     return render_template('auth/login.html')
 
-@cache.memoize(timeout=3)
+#@cache.memoize(timeout=3)
 def do_load_user(user_id):
     query = select(user_table).where(user_table.c.id == user_id)
     g.user = get_db().execute(query).fetchone()

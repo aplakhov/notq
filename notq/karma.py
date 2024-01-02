@@ -3,7 +3,7 @@ from notq.cache import cache
 from notq.db import db_execute
 from notq.data_model import get_starting_date
 
-@cache.memoize(timeout=30)
+#@cache.memoize(timeout=30)
 def get_user_karma(username):
     posts = db_execute(
         'SELECT SUM(v.karma_vote) AS votes'
@@ -21,7 +21,7 @@ def get_user_karma(username):
     cv = comments.votes or 0
     return int(pv + cv // 3)
 
-@cache.memoize(timeout=60)
+#@cache.memoize(timeout=60)
 def get_best_users(period):
     start = get_starting_date(period)
     userkarma = defaultdict(float)
