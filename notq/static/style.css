@@ -8,7 +8,7 @@ summary { list-style:none; }
 summary.commentheader { background-color:#f0f0f0; }
 summary.thiscommentheader { background-color:#f0f8f0; }
 details { margin-bottom: 12px; }
-details > p { margin-bottom: 2px; margin-top: 8px; }
+details > p { margin-bottom: 2px; margin-top: 8px; overflow: scroll; }
 nav { background: #3264c8; display: flex; align-items: center; padding: 0 0.5rem; }
 nav h1 { flex: auto; margin: 0; color: white; }
 nav ul  { display: flex; list-style: none; margin: 0; padding: 0; }
