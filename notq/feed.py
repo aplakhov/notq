@@ -5,15 +5,15 @@ from flask import Blueprint, abort, make_response, render_template
 
 bp = Blueprint('feed', __name__, url_prefix='/feed')
 
-def make_atom_feed(name, link, id, posts):
+def make_atom_feed(name, link, selfurl, posts):
     justnow = datetime.now()
     filtered_posts = [p for p in posts if p['created_ts'] < justnow]
     updated = max([p['created_ts'] for p in filtered_posts])
-    updated_str = updated.strftime(r'%Y-%m-%dT%H:%M:%S')
+    updated_str = updated.strftime(r'%Y-%m-%dT%H:%M:%SZ')
     for p in filtered_posts:
-        p['updated'] = p['created_ts'].strftime(r'%Y-%m-%dT%H:%M:%S')
+        p['updated'] = p['created_ts'].strftime(r'%Y-%m-%dT%H:%M:%SZ')
     
-    content = render_template('feed/atom.xml', name=name, posts=filtered_posts, updated=updated_str, link=link, id=id)
+    content = render_template('feed/atom.xml', name=name, posts=filtered_posts, updated=updated_str, link=link, selfurl=selfurl)
     res = make_response(content)
     res.headers['Content-Type'] = 'application/atom+xml; charset=utf-8'
     return res

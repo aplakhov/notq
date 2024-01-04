@@ -3,8 +3,9 @@
 
   <title>notq - {{name}}</title>
   <link href="{{link}}"/>
+  <link rel="self" href="{{selfurl}}"/>
   <updated>{{updated}}</updated>
-  <id>{{id}}</id>
+  <id>{{selfurl}}</id>
 
   {% for p in posts %}
   <entry>
@@ -12,7 +13,7 @@
     <link href="https://notq.ru/{{p['id']}}"/>
     <id>https://notq.ru/{{p['id']}}</id>
     <updated>{{p['updated']}}</updated>
-    <content>{{p['rendered']}}</content>
+    <content type="html">{{p['rendered']}}</content>
     <author>
       <name>{{p['username']}}</name>
       <uri>https://notq.ru/u/{{p['username']}}</uri>
