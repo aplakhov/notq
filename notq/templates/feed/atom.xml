@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title>notq - {{name}}</title>
+  <link href="{{link}}"/>
+  <updated>{{updated}}</updated>
+  <id>{{id}}</id>
+
+  {% for p in posts %}
+  <entry>
+    <title>{{p['title']}}</title>
+    <link href="https://notq.ru/{{p['id']}}"/>
+    <id>https://notq.ru/{{p['id']}}</id>
+    <updated>{{p['updated']}}</updated>
+    <content>{{p['rendered']}}</content>
+    <author>
+      <name>{{p['username']}}</name>
+      <uri>https://notq.ru/u/{{p['username']}}</uri>
+    </author>
+  </entry>
+  {% endfor %}
+</feed>
