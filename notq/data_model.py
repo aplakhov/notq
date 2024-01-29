@@ -273,6 +273,7 @@ def select_comments_with_votes():
         comment_table.c.author_id,
         comment_table.c.post_id,
         comment_table.c.created,
+        comment_table.c.body,
         comment_table.c.rendered,
         comment_table.c.parent_id,
         comment_table.c.anon,
@@ -290,14 +291,22 @@ def select_comments_with_votes():
     query = query.group_by(comment_table.c.id, post_table.c.id, user_table.c.id)
     return query
 
+def calc_comment_score_for_best(c):
+    res = c.votes # TODO: change to c.weighted_votes
+    if res > 0:
+        res += len(c.body) / 1000
+        if not c.parent_id:
+            res += 1
+    return res
+
 #@cache.memoize(timeout=60)
 def get_best_comments(period):
     start = get_starting_date(period)
     query = select_comments_with_votes().where(comment_table.c.created > start)
     comments_data = get_db().execute(query).fetchall()
     return [
-        comment_from_data(c) 
-        for c in nlargest(250, comments_data, key=lambda c: c.weighted_votes)
+        comment_from_data(c)
+        for c in nlargest(250, comments_data, key=calc_comment_score_for_best)
         if c.weighted_votes >= 0
     ]
 
