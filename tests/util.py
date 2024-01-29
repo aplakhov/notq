@@ -1,3 +1,4 @@
+import re
 from notq.db import db_execute_commit
 
 def register_and_login(client, username, password):
@@ -6,6 +7,14 @@ def register_and_login(client, username, password):
         '/auth/register', data={'username': username, 'password': password}
     )
     assert response.headers["Location"] == "/"
+
+def do_logout(client, username):
+    resp = client.get(f'/u/{username}')
+    assert resp.status_code == 200
+    html = resp.data.decode()
+    link = re.search(r'<a href="(/auth/logout/\w+)"', html)
+    assert link and link.group(1)
+    client.get(link.group(1))
 
 def make_post(client, title, body, authorship="thisuser"):
     check_page_contains(client, '/create', 'Написать')

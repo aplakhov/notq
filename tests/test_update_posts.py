@@ -48,7 +48,7 @@ def test_cant_edit_or_delete_not_your_post(client):
     register_and_login(client, 'abc', 'a')
     make_post(client, 'post1', 'content1')
 
-    client.get('/auth/logout')
+    do_logout(client, 'abc')
     check_forbidden_action(client, '/1/update', data={'title':'post1', 'body':'new content'})
     check_forbidden_action(client, '/1/delete')
 

@@ -11,7 +11,7 @@ def test_anon_post1(client):
     check_page_contains_several(client, '/', fragments + ['style="color: #00a000"'])
     check_page_doesnt_contain(client, '/u/abc', title)
 
-    client.get('/auth/logout')
+    do_logout(client, 'abc')
     check_page_contains_several(client, '/', fragments)
     check_page_doesnt_contain(client, '/u/abc', title)
 
@@ -27,7 +27,7 @@ def test_anon_post2(client):
     check_page_doesnt_contain(client, '/', 'style="color: #00a000"')
     check_page_doesnt_contain(client, '/u/abc', title)
 
-    client.get('/auth/logout')
+    do_logout(client, 'abc')
     check_page_contains_several(client, '/', fragments)
     check_page_doesnt_contain(client, '/u/abc', title)
 
@@ -43,7 +43,7 @@ def test_comment(client):
 
     fragments = [title, body, commenttext, 'abc', 'def']
     check_page_contains_several(client, '/1', fragments + ['style="color: #00a000"'])
-    client.get('/auth/logout')
+    do_logout(client, 'def')
     check_page_contains_several(client, '/1', fragments)
 
 def anon_comment_checks(client, type):
@@ -58,7 +58,7 @@ def anon_comment_checks(client, type):
 
     fragments = [title, body, commenttext, 'abc', 'anonymous']
     check_page_contains_several(client, '/1', fragments)
-    client.get('/auth/logout')
+    do_logout(client, 'def')
     check_page_contains_several(client, '/1', fragments)
     check_page_doesnt_contain(client, '/1', 'def')
 

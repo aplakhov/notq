@@ -13,7 +13,7 @@ def test_new_user(client):
 
 def test_two_new_users(client):
     register_and_login(client, 'abc', 'a')
-    client.get('/auth/logout')
+    do_logout(client, 'abc')
     
     register_and_login(client, 'def', 'a')
     
@@ -40,7 +40,7 @@ def test_empty_service(client):
 
 def test_logout(client):
     register_and_login(client, 'abc', 'a')
-    client.get('/auth/logout')
+    do_logout(client, 'abc')
     check_page_contains(client, '/', 'Войти')
     assert_default_self_page(client, 'abc')
 
@@ -51,7 +51,7 @@ def test_first_post_self_upvote(client):
     make_post(client, title, body)
     fragments = [title, body, '<div id="nv1">1</div>']
     check_page_contains_several(client, '/', fragments + ['style="color: #00a000"'])
-    client.get('/auth/logout')
+    do_logout(client, 'abc')
     check_page_contains_several(client, '/', fragments)
 
 def test_two_votes(client):

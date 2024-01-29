@@ -36,7 +36,7 @@ def test_cant_edit_not_your_comment(client):
     check_forbidden_action(client, '/1/updatecomment/1', data={'body':'new content'})
     check_forbidden_action(client, '/1/updatecomment/1', data={'body':''})
 
-    client.get('/auth/logout')
+    do_logout(client, 'def')
     check_forbidden_action(client, '/1/updatecomment/1', data={'body':'new content'})
     check_forbidden_action(client, '/1/updatecomment/1', data={'body':''})
     check_forbidden_action(client, '/1/updatecomment/2', data={'body':'new content'})

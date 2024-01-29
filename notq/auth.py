@@ -8,8 +8,10 @@ from sqlalchemy.exc import IntegrityError
 from notq.karma import get_user_karma
 from notq.cache import cache
 
+from hashlib import sha256
+
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, abort, current_app, flash, g, redirect, render_template, request, session, url_for
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -91,6 +93,10 @@ def login():
         return do_login(username, password)
     return render_template('auth/login.html')
 
+def make_token(secret, username):
+    token_source = secret + username
+    return sha256(token_source.encode()).hexdigest()
+
 #@cache.memoize(timeout=3)
 def do_load_user(user_id):
     query = select(user_table).where(user_table.c.id == user_id)
@@ -99,9 +105,11 @@ def do_load_user(user_id):
         g.karma = get_user_karma(g.user.username)
         g.active_notifies = has_unread_notifies(g.user.id)
         g.canVote = 1
+        g.token = make_token(current_app.config['SECRET_KEY'], g.user.username)
     else:
         g.karma = None
         g.canVote = 0
+        g.token = None
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -114,8 +122,10 @@ def load_logged_in_user():
     else:
         do_load_user(user_id)
 
-@bp.route('/logout')
-def logout():
+@bp.route('/logout/<token>')
+def logout(token):
+    if token != g.token:
+        abort(403)
     session.clear()
     return redirect(url_for('index'))
 

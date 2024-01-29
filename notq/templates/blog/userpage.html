@@ -17,7 +17,7 @@
     </header>
     {% if black_logo %}<div><a href="#" style="color:#242f33"><img src="{{url_for('static', filename='gold.png')}}"/>&nbsp;ценный пользователь</a></div>{% endif %}
     {% if g.user and g.user.username == name %}
-    <div style="background-color: #f0f0f0">это вы (<a href="/auth/logout">разлогиниться</a>)</div>
+    <div style="background-color: #f0f0f0">это вы (<a href="/auth/logout/{{g.token}}">разлогиниться</a>)</div>
     {% endif %}
     {% if not pager or not pager['page'] %}
       <p class="body">С нами с <strong>{{ user['created' ]}}</strong><br/>
