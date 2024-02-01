@@ -33,9 +33,9 @@ def make_comments_string(n):
     flexn = n % 10
     if flexn == 1:
         return str(n) + " ответ"
-    if flexn < 5:
-        return str(n) + " ответа"
-    return str(n) + " ответов"
+    if flexn == 0 or flexn >= 5:
+        return str(n) + " ответов"
+    return str(n) + " ответа"
 
 def readable_timediff(created):
     diff = (datetime.now() - created).total_seconds()
