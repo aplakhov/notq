@@ -19,9 +19,6 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    from . import cache
-    cache.cache.init_app(app)
-
     from . import db
     db.init_app(app)
 

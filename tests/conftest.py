@@ -3,7 +3,10 @@ import tempfile
 
 import pytest
 from notq import create_app
+from notq.auth import do_load_user
+from notq.data_model import get_best_posts, get_top_posts
 from notq.db import init_db
+from notq.karma import get_user_karma
 
 @pytest.fixture
 def app():
@@ -20,6 +23,12 @@ def app():
 
     with app.app_context():
         init_db()
+
+    #there definitely should exist a better way
+    do_load_user.cache_clear()
+    get_user_karma.cache_clear()
+    get_top_posts.cache_clear()
+    get_best_posts.cache_clear()
 
     yield app
 

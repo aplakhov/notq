@@ -1,5 +1,4 @@
 from tests.util import *
-from notq.cache import cache
 
 def make_some_spam_and_a_moderator(client, app):
     register_and_login(client, 'spamer', 'a')
@@ -51,7 +50,6 @@ def test_moderator_comment_actions(client, app):
     assert 'Тут был спам' in html
 
     client.post('/1/updatecomment/2', data={'body':''})
-    cache.clear()
     check_page_doesnt_contain(client, '/1', 'https://spamcontent.ru')
 
 

@@ -1,5 +1,4 @@
 from sqlalchemy import select, text
-from notq.cache import cache
 from notq.data_model import readable_timediff
 from notq.db import db_execute, db_execute_commit, get_db
 from notq.db_structure import *

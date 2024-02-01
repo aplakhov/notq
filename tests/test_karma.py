@@ -1,5 +1,5 @@
+from notq.karma import get_user_karma
 from tests.util import *
-from notq.cache import cache
 
 def test_karma(client):
     register_and_login(client, 'abc', 'a')
@@ -9,8 +9,7 @@ def test_karma(client):
     client.post('/1/vote/2')
     register_and_login(client, 'ghi', 'a')
     client.post('/1/vote/2')
-
-    cache.clear()
+    get_user_karma.cache_clear()
 
     check_page_contains(client, '/u/abc', '<strong>2</strong>')
 
@@ -30,8 +29,7 @@ def test_comments_karma(client):
     register_and_login(client, 'ghi', 'a')
     client.post('/1/votec/2/2')
     client.post('/1/votec/3/2')
-
-    cache.clear()
+    get_user_karma.cache_clear()
 
     check_page_contains(client, '/u/abc', '<strong>1</strong>')
 

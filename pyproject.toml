@@ -6,7 +6,7 @@ dependencies = [
     "flask",
     "markdown",
     "html-sanitizer",
-    "Flask-Caching",
+    "cachetools",
     "Pygments",
     "SQLAlchemy",
     "psycopg2"

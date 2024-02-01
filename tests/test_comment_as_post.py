@@ -1,5 +1,4 @@
 from tests.util import *
-from notq.cache import cache
 from notq.autocut import autocut
 from notq.constants import AUTOCUT_COMMENT_HEIGHT
 
@@ -12,7 +11,6 @@ def test_comment_as_post(client):
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':1, 'text':'comment2', 'newpost':'on'})
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':'comment3', 'newpost':'on'})
     
-    cache.clear()
     register_and_login(client, 'ghi', 'a')
     check_page_contains_several(client, '/1', ['abc', 'def', 'comment1', 'comment2', 'comment3'])
     check_page_contains_several(client, '/2', ['<h1>Ответ на запись &#34;post1&#34;</h1>', 'def', 'comment2'])
@@ -27,7 +25,6 @@ def test_comment_as_post_and_return(client):
     assert lorem_ipsum != autocut(lorem_ipsum, AUTOCUT_COMMENT_HEIGHT, True)
     client.post('/addcomment', data={'parentpost':1, 'parentcomment':0, 'text':lorem_ipsum, 'newpost':'on'})
 
-    cache.clear()
     check_page_contains_several(client, '/', ['<h1>Ответ на запись &#34;post1&#34;</h1>', 'def', lorem_ipsum[:50]])
     check_page_contains_several(client, '/2', ['<h1>Ответ на запись &#34;post1&#34;</h1>', 'def', lorem_ipsum])
     check_page_contains_several(client, '/1', ['abc', 'post1', 'def', 'Sed ut perspiciatis', 'Читать дальше →'])

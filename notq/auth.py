@@ -6,7 +6,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
 
 from notq.karma import get_user_karma
-from notq.cache import cache
+from cachetools import cached, TTLCache
 
 from hashlib import sha256
 
@@ -97,30 +97,26 @@ def make_token(secret, username):
     token_source = secret + username
     return sha256(token_source.encode()).hexdigest()
 
-#@cache.memoize(timeout=3)
+@cached(cache=TTLCache(maxsize=64, ttl=5))
 def do_load_user(user_id):
     query = select(user_table).where(user_table.c.id == user_id)
-    g.user = get_db().execute(query).fetchone()
-    if g.user:
-        g.karma = get_user_karma(g.user.username)
-        g.active_notifies = has_unread_notifies(g.user.id)
-        g.canVote = 1
-        g.token = make_token(current_app.config['SECRET_KEY'], g.user.username)
-    else:
-        g.karma = None
-        g.canVote = 0
-        g.token = None
+    return get_db().execute(query).fetchone()
 
 @bp.before_app_request
 def load_logged_in_user():
+    g.user = None
+    g.karma = None
+    g.canVote = 0
+    g.token = None
+    
     user_id = session.get('user_id')
-
-    if user_id is None:
-        g.user = None
-        g.karma = None
-        g.canVote = 0
-    else:
-        do_load_user(user_id)
+    if user_id is not None:
+        g.user = do_load_user(user_id)
+        if g.user:
+            g.karma = get_user_karma(g.user.username)
+            g.active_notifies = has_unread_notifies(g.user.id)
+            g.canVote = 1
+            g.token = make_token(current_app.config['SECRET_KEY'], g.user.username)
 
 @bp.route('/logout/<token>')
 def logout(token):
