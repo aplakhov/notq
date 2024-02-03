@@ -117,6 +117,7 @@ def load_logged_in_user():
             g.active_notifies = has_unread_notifies(g.user.id)
             g.canVote = 1
             g.token = make_token(current_app.config['SECRET_KEY'], g.user.username)
+            session.permanent = True
 
 @bp.route('/logout/<token>')
 def logout(token):

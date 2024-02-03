@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 from flask import Flask
 
@@ -13,6 +14,8 @@ def create_app(test_config=None):
         app.config.from_pyfile('config.py', silent=True)
     else:
         app.config.from_mapping(test_config)
+
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=500)
 
     try:
         os.makedirs(app.instance_path)
