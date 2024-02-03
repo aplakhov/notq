@@ -10,6 +10,7 @@ from notq.markup import make_html
 from notq.constants import POST_COMMENTS_PAGE_SIZE
 
 from notq.db_structure import *
+from notq.telegram_bot import send_post_to_tg_if_needed
 
 def get_user_votes_for_posts(user_id):
     votes = db_execute('SELECT vote, post_id FROM vote WHERE user_id = :id', id=user_id).fetchall()
@@ -401,6 +402,8 @@ def add_vote(user_id, is_golden_user, post_id, voteparam):
             'SET vote=excluded.vote,weighted_vote=excluded.weighted_vote,karma_vote=excluded.karma_vote',
             u=user_id, p=post_id, v=vote, w=weighted_vote, k=karma_vote
         )
+        if voteparam == 2:
+            send_post_to_tg_if_needed(post_id)
 
 def add_comment_vote(user_id, is_golden_user, post_id, comment_id, voteparam):
     if voteparam == 0 or voteparam == 1 or voteparam == 2:
@@ -488,3 +491,7 @@ def add_tags(post_text, post_id, remove_old_tags):
         if tagdata:            
             db_execute_commit('INSERT INTO posttag (post_id, tag_id) VALUES (:p, :t) ON CONFLICT DO NOTHING', 
                               p=post_id, t=tagdata.id)
+
+def increment_post_views(post_id):
+    query = 'UPDATE post SET views=COALESCE(views,0)+1 WHERE id=:p'
+    db_execute_commit(query, p=post_id)

@@ -215,6 +215,7 @@ def one_post(id, page):
     comments = posts[0]['comments']
     if comments:
         pager['numpages'] = comments[-1]['page'] + 1
+    increment_post_views(id)
     return render_template('blog/one_post.html', posts=posts, pager=pager,
                             upvoted=upvoted, downvoted=downvoted,
                             cupvoted=cupvoted, cdownvoted=cdownvoted)

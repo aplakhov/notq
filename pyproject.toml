@@ -9,7 +9,8 @@ dependencies = [
     "cachetools",
     "Pygments",
     "SQLAlchemy",
-    "psycopg2"
+    "psycopg2",
+    "python-telegram-bot"
 ]
 
 [build-system]

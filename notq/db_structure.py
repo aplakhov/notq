@@ -27,6 +27,8 @@ post_table = Table('post', db_metadata,
                    Column('anon', Boolean),
                    Column('show_in_feed', Boolean, nullable=False, default=True),
                    Column('edited_by_moderator', Boolean),
+                   Column('sent_to_tg', DateTime()),
+                   Column('views', Integer, default=0)
                    )
 Index("idx_post_created", post_table.c.created)
 Index("idx_post_author", post_table.c.author_id)
