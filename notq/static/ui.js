@@ -50,7 +50,7 @@ function addanswermenu(after, post, comment, cancomment) {
     if (cancomment)
       after.insertAdjacentHTML('afterend', answermenu)
     else
-      flash(after, "Чтобы оставлять комментарии, <a href='/auth/register'>зарегистрируйтесь</a>")
+      flash(after, "Чтобы оставлять комментарии, <a href='/auth/register'>зарегистрируйтесь</a> или <a href='/auth/login'>войдите</a>")
     after.style.display = "none"
     event.preventDefault()
 }

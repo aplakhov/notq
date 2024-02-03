@@ -3,7 +3,7 @@ function vote_any(id, newVal, suffix, handler, canVote) {
     let u = document.getElementById("uv" + suffix + id)
     let d = document.getElementById("dv" + suffix + id)
     if (!canVote) {
-        flash(v.parentNode.parentNode, "Чтобы голосовать, <a href='/auth/register'>зарегистрируйтесь</a>")
+        flash(v.parentNode.parentNode, "Чтобы голосовать, <a href='/auth/register'>зарегистрируйтесь</a> или <a href='/auth/login'>войдите</a>")
         return;
     }
     let curVal = 0
