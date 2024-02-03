@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, ForeignKey, MetaData, Table, Column, Integer, Float, String, DateTime, UniqueConstraint, func, Index
+from sqlalchemy import Boolean, ForeignKey, MetaData, Table, Column, Integer, Float, String, DateTime, UniqueConstraint, func, Index, select
 
 db_metadata = MetaData()
 
@@ -91,7 +91,49 @@ notifies_table = Table('notifies', db_metadata,
                 )
 idx_notify_user_post = Index('idx_notify_user_post', notifies_table.c.user_id, notifies_table.c.post_id)
 
-#from sqlalchemy.schema import CreateTable, CreateIndex
-#from sqlalchemy.dialects import postgresql
-#print(CreateTable(notifies_table).compile(dialect=postgresql.dialect()))
-#print(CreateIndex(idx_notify_user_post).compile(dialect=postgresql.dialect()))
+def select_posts_with_votes():
+    query = select(
+        post_table.c.id,
+        post_table.c.title,
+        post_table.c.body,
+        post_table.c.rendered,
+        post_table.c.cut_rendered,
+        post_table.c.created,
+        post_table.c.anon,
+        post_table.c.edited,
+        post_table.c.edited_by_moderator,
+        post_table.c.author_id,
+        post_table.c.sent_to_tg,
+        user_table.c.username,
+        user_table.c.is_golden,
+        func.sum(vote_table.c.vote).label('votes'),
+        func.sum(vote_table.c.weighted_vote).label('weighted_votes'),
+    )
+    query = query.join(user_table, user_table.c.id==post_table.c.author_id)
+    query = query.join(vote_table, vote_table.c.post_id==post_table.c.id)
+    query = query.group_by(post_table.c.id, user_table.c.id)
+    return query
+
+def select_comments_with_votes():
+    query = select(
+        comment_table.c.id,
+        comment_table.c.author_id,
+        comment_table.c.post_id,
+        comment_table.c.created,
+        comment_table.c.body,
+        comment_table.c.rendered,
+        comment_table.c.parent_id,
+        comment_table.c.anon,
+        comment_table.c.edited,
+        comment_table.c.edited_by_moderator,
+        user_table.c.username,
+        user_table.c.is_golden,
+        func.sum(commentvote_table.c.vote).label('votes'),
+        func.sum(commentvote_table.c.weighted_vote).label('weighted_votes'),
+        post_table.c.title
+    )
+    query = query.join(user_table, user_table.c.id==comment_table.c.author_id)
+    query = query.join(post_table, post_table.c.id==comment_table.c.post_id)
+    query = query.join(commentvote_table, commentvote_table.c.comment_id==comment_table.c.id)
+    query = query.group_by(comment_table.c.id, post_table.c.id, user_table.c.id)
+    return query
