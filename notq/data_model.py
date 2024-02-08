@@ -1,7 +1,7 @@
 from collections import defaultdict, namedtuple
 from heapq import nlargest
 from datetime import datetime, timedelta
-from flask import g
+from flask import current_app, g
 from sqlalchemy import select, text
 from cachetools import cached, TTLCache
 from notq.db import get_db, db_execute, db_execute_commit
@@ -340,8 +340,10 @@ def add_comment(text, rendered, author_id, post_id, parent_id, anon, linked_post
 def vote_values(voteparam, is_golden_user):
     vote = voteparam - 1
     if is_golden_user:
-        weighted_vote = 42 * vote
-        karma_vote = 7 * vote
+        golden_weight = current_app.config.get('GOLDEN_WEIGHT', 42)
+        golden_karma_weight = current_app.config.get('GOLDEN_KARMA_WEIGHT', 7)
+        weighted_vote = golden_weight * vote
+        karma_vote = golden_karma_weight * vote
     else:
         weighted_vote = karma_vote = vote
     if karma_vote < 0:
