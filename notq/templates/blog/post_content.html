@@ -9,6 +9,7 @@
         <div class="about">
           {% set userdata=post %}{% include 'user.html' %},
           {% if post['edited'] %}изменено {{ post['edited'] }}{% else %}{{ post['created'] }}{% endif %}
+          {% if post['show_views'] %}, <img src="/static/views.png"/>{{ post['show_views']}}{% endif %}
         </div>
       </div>
       {% if g.user.id == post['author_id'] and not post['edited_by_moderator'] %}

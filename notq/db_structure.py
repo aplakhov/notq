@@ -104,6 +104,7 @@ def select_posts_with_votes():
         post_table.c.edited_by_moderator,
         post_table.c.author_id,
         post_table.c.sent_to_tg,
+        post_table.c.views,
         user_table.c.username,
         user_table.c.is_golden,
         func.sum(vote_table.c.vote).label('votes'),

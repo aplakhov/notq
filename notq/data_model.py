@@ -83,6 +83,8 @@ def post_from_sql_row(p, ncomments, full_post):
         res['is_golden'] = False
     if full_post:
         res['comments'] = get_post_comments(p.id)
+        if p.views >= 70:
+            res['show_views'] = p.views
     return res
 
 def top_post_scoring(post, now, add_score):
