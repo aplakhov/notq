@@ -34,4 +34,5 @@ function vote(postid, newVal, canVote) {
 function votec(postid, commentid, newVal, canVote) {
     const handler = "/" + postid + "/votec/" + commentid + "/"
     vote_any(commentid, newVal, "c", handler, canVote)
+    event.preventDefault()
 }
