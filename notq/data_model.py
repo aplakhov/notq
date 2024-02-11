@@ -100,8 +100,10 @@ def best_post_scoring(post):
     return post.weighted_votes
 
 def calc_comment_additional_scoring(now):
-    query = "SELECT id, post_id, created FROM comment ORDER BY id DESC LIMIT 100"
-    lastcomments = get_db().execute(text(query)).fetchall()
+    query = select(comment_table.c.id, comment_table.c.post_id, comment_table.c.created).order_by(comment_table.c.created.desc()).limit(100)
+    lastcomments = get_db().execute(query).fetchall()
+    #query = "SELECT id, post_id, created FROM comment ORDER BY id DESC LIMIT 100"
+    #lastcomments = get_db().execute(text(query)).fetchall()
     res = defaultdict(float)
     for c in lastcomments:
         halflife = 2 * 3600
