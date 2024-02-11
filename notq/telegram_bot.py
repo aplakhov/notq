@@ -9,6 +9,8 @@ from notq.db import db_execute_commit, get_db
 from notq.db_structure import post_table
 
 def send_post_to_tg_if_needed(id):
+    if not 'TG_BOT_TOKEN' in current_app.config:
+        return
     post = get_db().execute(select_posts_with_votes().where(post_table.c.id == id)).fetchone()
     if not post or post.sent_to_tg:
         return
