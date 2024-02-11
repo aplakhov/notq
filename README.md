@@ -43,4 +43,5 @@ Flask - очень приятная технология: вы можете ос
 - в каждом из них написать следующую строчку:
     `DATABASE='postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}'`
 - прогнать тесты (`pytest`) в этом варианте
-
+- инициализировать "настоящую" БД, запустив `flask --app notq init-db-drops-all-extremely-unsafe`
+- протестировать вручную, запустив `flask --app notq run --host 0.0.0.0 --port <port> --debug`
