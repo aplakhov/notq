@@ -54,3 +54,23 @@ function addanswermenu(after, post, comment, cancomment) {
     after.style.display = "none"
     event.preventDefault()
 }
+
+function toggleScheme() {
+  document.body.classList.toggle("dark-mode");
+  var theme = document.body.classList.contains("dark-mode")
+    ? "dark"
+    : "light";
+  localStorage.setItem("theme", theme);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const schemeToggleBtn = document.getElementById("scheme-toggle");
+  const currentTheme = localStorage.getItem("theme");
+
+  const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+  if (prefersDarkScheme.matches || currentTheme == "dark") {
+    document.body.classList.add("dark-mode");
+  }
+
+  schemeToggleBtn.addEventListener("click", toggleScheme);
+});

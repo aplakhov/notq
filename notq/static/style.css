@@ -299,3 +299,31 @@ ul {
 .topusers tr:nth-child(even) {
   background-color: #f0f0f0;
 }
+
+/* scheme control */
+.scheme-toggle-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  border: 1px solid white;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.scheme-toggle-button .dark-mode-icon {
+  display: inline;
+}
+.scheme-toggle-button .light-mode-icon {
+  display: none;
+}
+
+.dark-mode .scheme-toggle-button .dark-mode-icon {
+  display: none;
+}
+.dark-mode .scheme-toggle-button .light-mode-icon {
+  display: inline;
+}
