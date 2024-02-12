@@ -68,8 +68,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const currentTheme = localStorage.getItem("theme");
 
   const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
-  if (prefersDarkScheme.matches || currentTheme == "dark") {
+  if (prefersDarkScheme.matches || currentTheme === "dark") {
     document.body.classList.add("dark-mode");
+  }
+
+  if (currentTheme === "light") {
+    document.body.classList.remove("dark-mode");
   }
 
   schemeToggleBtn.addEventListener("click", toggleScheme);
