@@ -241,8 +241,14 @@ nav li {
   min-height: 12em;
   resize: vertical;
 }
+.navpage {
+  color: color-mix(in hwb, var(--color-highlighted) 70%, var(--color-text));
+  margin-right: 20px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
 .navlink {
-  color: #aaa;
+  color: var(--color-primary);
   margin-right: 20px;
   margin-top: 8px;
   margin-bottom: 8px;
