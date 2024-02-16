@@ -1,6 +1,5 @@
 </header><header id="bestmenu"{% if not besturl %} style="display:none"{% endif %}>
 {% if besttype %}{%set suffix="/"+besttype%}{%else%}{%set suffix=""%}{%endif%}
-<a class="navlink" {% if besturl == '/best/day' %} style="color:black" {% else %} href="/best/day{{suffix}}"{% endif %}>день</a>
 <a class="navlink" {% if besturl == '/best/week' %} style="color:black" {% else %} href="/best/week{{suffix}}"{% endif %}>неделя</a>
 <a class="navlink" {% if besturl == '/best/month' %} style="color:black" {% else %} href="/best/month{{suffix}}"{% endif %}>месяц</a>
 <a class="navlink" {% if besturl == '/best/year' %} style="color:black" {% else %} href="/best/year{{suffix}}"{% endif %}>год</a>
