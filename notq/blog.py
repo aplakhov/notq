@@ -12,7 +12,7 @@ from notq.markup import make_html
 from notq.data_model import *
 from notq.karma import get_user_karma, get_best_users
 from notq.constants import *
-from notq.motivating_texts import make_post_starting_text
+from notq.motivating_texts import insert_motivating_post, make_post_starting_text
 from notq.notify import create_answer_notify, get_notifies, mark_as_read
 
 bp = Blueprint('blog', __name__)
@@ -39,7 +39,9 @@ def posts_list_with_pager(template_name, all_posts, page, pageurl, **kwargs):
 @bp.route('/', defaults={'page': 0})
 @bp.route('/page/<int:page>')
 def index(page):
-    return posts_list_with_pager('blog/index.html', get_top_posts(), page, '/page/')
+    posts = get_top_posts()
+    posts = insert_motivating_post(posts)
+    return posts_list_with_pager('blog/index.html', posts, page, '/page/')
 
 @bp.route('/new', defaults={'page': 0})
 @bp.route('/new/page/<int:page>')

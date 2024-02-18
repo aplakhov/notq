@@ -1,6 +1,8 @@
   {% for post in posts %}
+    {% if post['custom_html'] %}{{post['custom_html']|safe}}{% else %}
     {% include 'blog/post_content.html' %}
     <a href="{{ url_for('blog.one_post', id=post['id']) + '#answersection' }}">{{post['ncomments']}}</a>
+    {% endif %}
     {% if not loop.last %}
       <hr>
     {% endif %}
