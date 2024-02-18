@@ -9,7 +9,7 @@
     <label for="title">Заголовок</label>
     <input name="title" style="width:100%" id="title" value="{{ request.form['title'] }}" required>
     <label for="body">Текст</label>
-    <textarea name="body" style="width:100%" id="body">{{ request.form['body'] }}</textarea>
+    <textarea name="body" style="width:100%" id="body">{{ request.form['body'] or starting_text }}</textarea>
     <input type="submit" value="Отправить">
     <input type="button" onclick="toggle('moar')" value="..."/>
     <div id='moar' style="display:none">

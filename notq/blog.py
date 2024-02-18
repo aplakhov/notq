@@ -12,6 +12,7 @@ from notq.markup import make_html
 from notq.data_model import *
 from notq.karma import get_user_karma, get_best_users
 from notq.constants import *
+from notq.motivating_texts import make_post_starting_text
 from notq.notify import create_answer_notify, get_notifies, mark_as_read
 
 bp = Blueprint('blog', __name__)
@@ -286,10 +287,10 @@ def do_create_post(title, body, user, anon, paranoid, creation_time=None):
     else:
         return redirect('/'), None
 
-
-@bp.route('/create', methods=('GET', 'POST'))
+@bp.route('/create', methods=('GET', 'POST'), defaults={'type': 0})
+@bp.route('/create/type/<int:type>', methods=('GET', 'POST'))
 @login_required
-def create():
+def create(type):
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
@@ -307,7 +308,7 @@ def create():
             res, _ = do_create_post(title, body, g.user, anon, paranoid)
             return res
 
-    return render_template('blog/create.html')
+    return render_template('blog/create.html', starting_text=make_post_starting_text(type))
 
 def get_post_to_update(id):
     post = db_execute(
