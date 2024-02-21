@@ -1,8 +1,8 @@
 from collections import defaultdict, namedtuple
 from heapq import nlargest
 from datetime import datetime, timedelta
-from flask import current_app, g
-from sqlalchemy import select, text
+from flask import current_app
+from sqlalchemy import select
 from cachetools import cached, TTLCache
 from notq.db import get_db, db_execute, db_execute_commit
 from notq.markdown_tags import collect_tags
