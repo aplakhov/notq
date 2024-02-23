@@ -24,12 +24,13 @@
       </a></span>
       <span title="ваша страница">{% set userdata=g.user %}{% include 'user.html' %}</span>
       <span title="ваша карма" class="navkarma">{{ g.karma }}</span>
-      </li>
     {% else %}
-      <li><a href="{{ url_for('auth.login') }}">Войти</a>
+      <li><a href="{{ url_for('auth.login') }}">Войти</a></li>
       <li><a href="{{ url_for('auth.register') }}">Регистрация</a>
     {% endif %}
-  </ul>
+      <span title="подписаться на обновления"><a href="https://t.me/notq_hot"><img src="{{ url_for('static', filename='telegram.png') }}"/></a>&nbsp;<a href="https://notq.ru/292"><img src="{{ url_for('static', filename='rss.png') }}"/></a></span>
+      </li>
+</ul>
 </nav>
 <section class="content">
   <header>
