@@ -65,6 +65,8 @@ def best_title(period):
 @bp.route('/best/<period>', defaults={'page': 0})
 @bp.route('/best/<period>/page/<int:page>')
 def best(period, page):
+    if period == 'day':
+        period = 'week'
     title = 'Лучшие записи ' + best_title(period)
     return posts_list_with_pager('blog/best.html', get_best_posts(period), page, f'/best/{period}/page/', 
                                  besturl=url_for('blog.best', period=period), best_title=title)
