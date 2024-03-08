@@ -281,6 +281,12 @@ def sort_comments_tree(comments):
         if 'children' in c:
             sort_comments_tree(c['children'])
 
+def mark_comments_depth(comments, level):
+    for c in comments:
+        c['depth'] = level
+        if 'children' in c:
+            mark_comments_depth(c['children'], level + 1)
+
 def subtree_num_comments(subtree):
     res = 1
     if 'children' in subtree:
@@ -323,6 +329,7 @@ def get_post_comments(post_id):
             index[c.id] = parent['children'][-1]
 
     sort_comments_tree(res)
+    mark_comments_depth(res, 0)
     add_page_numbers(res)
     return res
 

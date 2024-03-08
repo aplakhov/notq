@@ -23,7 +23,7 @@
         document.addEventListener("DOMContentLoaded", ready)
     </script>
     {% for comment in post['comments'] recursive %}{% if comment['page'] == pager['page'] %}
-      <details {% if not comment['closed'] %}open="1"{% endif %} id="answer{{ comment['id'] }}">
+      <details {% if not comment['closed']  %}open="1"{% endif %} id="answer{{ comment['id'] }}">
         <summary class="{% if g.user and g.user.id == comment['author_id'] %}thiscommentheader{% else %}commentheader{% endif %}">
           <small><a class="vote" id="uvc{{comment['id']}}" {% if comment['id'] in cupvoted %} style="color: #00a000" {% endif %} onclick="votec({{post['id']}},{{comment['id']}},1,{{g.canVote}})" title="Больше такого">▲</a></small>
           <small id="nvc{{comment['id']}}" style="color:gray">{{comment['votes']}}</small>
@@ -36,8 +36,9 @@
         <a href="{{ url_for('blog.updatecomment', post_id=post['id'], comment_id=comment['id']) }}" class="smallaction">✎</a>
         {% endif %}
         <small><a class="inlineaction" href="#" onclick="addanswermenu(this,{{ post['id'] }},{{ comment['id'] }},{{g.canVote}})">ответить</a></small>        
-        {% if comment.children -%}
-            <ul style="margin-top:12px">{{ loop(comment.children) }}</ul>
+        {% if comment.children %}
+            <div class="commentpadding{% if comment.depth >= 3 %}deep{% endif %}">
+            {{ loop(comment.children) }}</div>
         {% endif %}
       </details>
     {% endif %}{% endfor %}
