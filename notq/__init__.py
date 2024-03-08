@@ -28,6 +28,9 @@ def create_app(test_config=None):
     from . import robopost
     app.cli.add_command(robopost.robopost_command)
 
+    from . import give_gold
+    app.cli.add_command(give_gold.give_gold_command)
+
     from . import auth
     app.register_blueprint(auth.bp)
 
