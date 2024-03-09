@@ -57,9 +57,9 @@ def create_gold_notify(username):
     notify_message = 'Вы получили статус «ценного пользователя». Теперь ваш голос сильнее влияет на ранжирование, а рядом с вашим именем показывается золотой глайдер.'
     link = '/u/' + user.username
     notify_html = f'<a class="notify" href="{link}">{notify_message}</a>'
-    query = 'INSERT INTO notifies (user_id, post_id, text) VALUES(:u, :p, :t)'
+    query = 'INSERT INTO notifies (user_id, text) VALUES(:u, :t)'
     db = get_db()
-    db.execute(text(query), {'u': user.id, 'p': -1, 't': notify_html})
+    db.execute(text(query), {'u': user.id, 't': notify_html})
     db.commit()
 
 def get_notifies(user):
@@ -91,7 +91,8 @@ def mark_as_read(user_id, post_id):
     db_execute_commit(query, t=True, u=user_id, p=post_id)
 
 def mark_profile_as_read(user_id):
-    mark_as_read(user_id, -1)
+    query = 'UPDATE notifies SET is_read=:t WHERE user_id=:u AND post_id IS NULL'
+    db_execute_commit(query, t=True, u=user_id)
 
 def has_unread_notifies(user_id):
     res = db_execute(

@@ -140,7 +140,7 @@ def userpage(username, page):
         'about': get_about_post(username).rendered,
     }
 
-    if username == g.user.username:
+    if g.user and username == g.user.username:
         mark_profile_as_read(g.user.id)
 
     return posts_list_with_pager('blog/userpage.html', posts, page, f'/u/{username}/page/', 

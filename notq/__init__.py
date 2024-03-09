@@ -30,6 +30,7 @@ def create_app(test_config=None):
 
     from . import give_gold
     app.cli.add_command(give_gold.give_gold_command)
+    app.cli.add_command(give_gold.give_one_gold_command)
 
     from . import auth
     app.register_blueprint(auth.bp)

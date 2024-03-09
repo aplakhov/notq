@@ -84,7 +84,7 @@ Index('idx_posttag_tag', posttag_table.c.tag_id)
 
 notifies_table = Table('notifies', db_metadata,
                     Column('user_id', Integer, ForeignKey('notquser.id', ondelete='cascade'), nullable=False),
-                    Column('post_id', Integer, ForeignKey('post.id', ondelete='cascade'), nullable=False),
+                    Column('post_id', Integer, ForeignKey('post.id', ondelete='cascade')),
                     Column('text', String, nullable=False),
                     Column('created', DateTime(), server_default=func.now()),
                     Column('is_read', Boolean, default=False),

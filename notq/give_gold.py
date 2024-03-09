@@ -29,3 +29,12 @@ def give_gold_command(period, karma, real):
         print("Giving gold to ", user['username'])
         if real:
             do_give_gold(user['username'])
+
+@click.command('give-single-gold')
+@click.option('-u', '--user', type=str)
+def give_one_gold_command(user):
+    '''
+    Gives gold just to one specified user
+    '''
+    print("Giving gold to ", user)
+    do_give_gold(user)
