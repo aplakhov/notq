@@ -4,7 +4,7 @@ from tests.util import *
 
 def has_notifies(username):
     return get_db().execute(
-            text(f"SELECT * FROM notifies n JOIN notquser u ON u.id=n.user_id WHERE u.username = '{username}'"),
+            text(f"SELECT * FROM notifies n JOIN notquser u ON u.id=n.user_id WHERE u.username = '{username}' AND NOT n.is_read"),
         ).fetchone() is not None
 
 def test_no_notify_on_self_answer(client, app):

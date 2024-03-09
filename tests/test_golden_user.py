@@ -49,7 +49,12 @@ def test_black_logo(client, app):
 def test_gold_notification(client, app):
     register_and_login(client, 'gld', 'a')
     with app.app_context():
-        assert not has_notifies('abc')
+        assert not has_notifies('gld')
     make_user_golden(app, 'gld')
     with app.app_context():
-        assert has_notifies('abc')
+        assert has_notifies('gld')
+    check_page_contains(client, '/notifies', 'золото')
+    response = client.get('/u/gld')
+    assert response.status_code == 200
+    with app.app_context():
+        assert not has_notifies('gld')
