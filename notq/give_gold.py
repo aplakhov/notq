@@ -1,6 +1,11 @@
 import click
 from notq.db import db_execute_commit
 from notq.karma import get_best_users
+from notq.notify import create_gold_notify
+
+def do_give_gold(username):
+    db_execute_commit('UPDATE notquser SET is_golden=:t WHERE username=:u', t=True, u=username)
+    create_gold_notify(username)
 
 @click.command('give-karma-based-gold')
 @click.argument('period')
@@ -23,4 +28,4 @@ def give_gold_command(period, karma, real):
             continue
         print("Giving gold to ", user['username'])
         if real:
-            db_execute_commit('UPDATE notquser SET is_golden=:t WHERE username=:u', t=True, u=user['username'])
+            do_give_gold(user['username'])

@@ -13,7 +13,7 @@ from notq.data_model import *
 from notq.karma import get_user_karma, get_best_users
 from notq.constants import *
 from notq.motivating_texts import insert_motivating_post, make_post_starting_text
-from notq.notify import create_answer_notify, get_notifies, mark_as_read
+from notq.notify import create_answer_notify, get_notifies, mark_as_read, mark_profile_as_read
 
 bp = Blueprint('blog', __name__)
 
@@ -139,6 +139,9 @@ def userpage(username, page):
         'banned': banned_until,
         'about': get_about_post(username).rendered,
     }
+
+    if username == g.user.username:
+        mark_profile_as_read(g.user.id)
 
     return posts_list_with_pager('blog/userpage.html', posts, page, f'/u/{username}/page/', 
                                  user=user, name=username, comments=comments, black_logo=is_golden)

@@ -49,6 +49,19 @@ def create_answer_notify(post_id, parent_id, answer_author_id):
         db.execute(text(query), {'u': notify_user, 'p': post_id, 't': notify_html})
         db.commit()
 
+def create_gold_notify(username):
+    user = db_execute(
+        'SELECT * FROM notquser WHERE username=:u', u=username).fetchone()
+    if not user:
+        return
+    notify_message = 'Вы получили статус «ценного пользователя». Теперь ваш голос сильнее влияет на ранжирование, а рядом с вашим именем показывается золотой глайдер.'
+    link = '/u/' + user.username
+    notify_html = f'<a class="notify" href="{link}">{notify_message}</a>'
+    query = 'INSERT INTO notifies (user_id, post_id, text) VALUES(:u, :p, :t)'
+    db = get_db()
+    db.execute(text(query), {'u': user.id, 'p': -1, 't': notify_html})
+    db.commit()
+
 def get_notifies(user):
     query = select(notifies_table.c.text, notifies_table.c.created, notifies_table.c.is_read)
     query = query.where(notifies_table.c.user_id==user.id).order_by(notifies_table.c.created.desc()).limit(100)
@@ -76,6 +89,9 @@ def get_notifies(user):
 def mark_as_read(user_id, post_id):
     query = 'UPDATE notifies SET is_read=:t WHERE user_id=:u AND post_id=:p'
     db_execute_commit(query, t=True, u=user_id, p=post_id)
+
+def mark_profile_as_read(user_id):
+    mark_as_read(user_id, -1)
 
 def has_unread_notifies(user_id):
     res = db_execute(

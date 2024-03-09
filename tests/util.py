@@ -1,5 +1,6 @@
 import re
 from notq.db import db_execute_commit
+from notq.give_gold import do_give_gold
 
 def register_and_login(client, username, password):
     assert client.get('/auth/register').status_code == 200
@@ -53,4 +54,4 @@ def become_moderator(app, username):
 
 def make_user_golden(app, username):
     with app.app_context():
-        db_execute_commit("UPDATE notquser SET is_golden=:t WHERE username = :u", t=True, u=username)
+        do_give_gold(username)

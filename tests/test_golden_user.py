@@ -1,3 +1,4 @@
+from tests.test_notifies import has_notifies
 from tests.util import *
 
 def test_golden_user(client, app):
@@ -44,3 +45,11 @@ def test_black_logo(client, app):
 
     register_and_login(client, 'abc', 'a')
     check_page_contains_several(client, '/u/gld', fragments)
+
+def test_gold_notification(client, app):
+    register_and_login(client, 'gld', 'a')
+    with app.app_context():
+        assert not has_notifies('abc')
+    make_user_golden(app, 'gld')
+    with app.app_context():
+        assert has_notifies('abc')
