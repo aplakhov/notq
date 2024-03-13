@@ -1,25 +1,25 @@
 :root {
-  /* Solarized Theme. See https://ethanschoonover.com/solarized */
-  --theme-color-base03: #002b36;
-  --theme-color-base02: #073642;
-  --theme-color-base01: #586e75;
-  --theme-color-base00: #657b83;
-  --theme-color-base0: #839496;
-  --theme-color-base1: #93a1a1;
-  --theme-color-base2: #eee8d5;
-  --theme-color-base3: #fdf6e3;
-  --theme-color-yellow: #b58900;
-  --theme-color-orange: #cb4b16;
-  --theme-color-red: #dc322f;
-  --theme-color-magenta: #d33682;
-  --theme-color-violet: #6c71c4;
-  --theme-color-blue: #268bd2;
-  --theme-color-cyan: #2aa198;
-  --theme-color-green: #859900;
+  /* One Dark Color Scheme */
+  --theme-color-base03: #282c34;
+  --theme-color-base02: #353b45;
+  --theme-color-base01: #3e4451;
+  --theme-color-base00: #545862;
+  --theme-color-base0: #abb2bf;
+  --theme-color-base1: #b6bdca;
+  --theme-color-base2: #c8ccd4;
+  --theme-color-base3: #dcdfe4;
+  --theme-color-yellow: #e5c07b;
+  --theme-color-orange: #d19a66;
+  --theme-color-red: #e06c75;
+  --theme-color-magenta: #c678dd;
+  --theme-color-violet: #a9a1e1;
+  --theme-color-blue: #61afef;
+  --theme-color-cyan: #56b6c2;
+  --theme-color-green: #98c379;
 }
 
 body {
-  --color-background: white;
+  --color-background: #eee;
   --color-highlighted: #f0f0f0;
   --color-text: #242f33;
   --color-accent: #377ba8;
