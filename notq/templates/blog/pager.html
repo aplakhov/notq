@@ -1,8 +1,8 @@
   {% if pager and pager['numpages'] > 1 %}<hr><p></p>
-  <a class="navlink" style="color:black">Страница</a>
+  <span class="navpage">Страница</span>
   {% for n in range(pager['numpages']) %}
   {% if n == pager['page'] %}
-  <a class="navlink" style="color:black">{{n+1}}</a>
+  <span class="navpage">{{n+1}}</span>
   {% else %}
   <a class="navlink" href="{{ pager['pageurl']}}{{n}}">{{n+1}}</a>
   {% endif %}

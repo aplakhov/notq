@@ -1,12 +1,45 @@
 </header><header id="bestmenu"{% if not besturl %} style="display:none"{% endif %}>
 {% if besttype %}{%set suffix="/"+besttype%}{%else%}{%set suffix=""%}{%endif%}
-<a class="navlink" {% if besturl == '/best/week' %} style="color:black" {% else %} href="/best/week{{suffix}}"{% endif %}>неделя</a>
-<a class="navlink" {% if besturl == '/best/month' %} style="color:black" {% else %} href="/best/month{{suffix}}"{% endif %}>месяц</a>
-<a class="navlink" {% if besturl == '/best/year' %} style="color:black" {% else %} href="/best/year{{suffix}}"{% endif %}>год</a>
-<a class="navlink" {% if besturl == '/best/all' %} style="color:black" {% else %} href="/best/all{{suffix}}"{% endif %}>вечное</a>
+
+{% if besturl == '/best/week' %}
+  <span class="navpage">неделя</span>
+{% else %}
+  <a class="navlink" href="/best/week{{suffix}}">неделя</a>
+{% endif %}
+
+{% if besturl == '/best/month' %}
+  <span class="navpage">месяц</span>
+{% else %}
+  <a class="navlink" href="/best/month{{suffix}}">месяц</a>
+{% endif %}
+
+{% if besturl == '/best/year' %}
+  <span class="navpage">год</span>
+{% else %}
+  <a class="navlink" href="/best/year{{suffix}}">год</a>
+{% endif %}
+
+{% if besturl == '/best/all' %}
+  <span class="navpage">вечное</span>
+{% else %}
+  <a class="navlink" href="/best/all{{suffix}}">вечное</a>
+{% endif %}
+
 {% if besturl %}
 </header><header>
-<a class="navlink" {% if not besttype %}style="color:black"{% else %}href="{{besturl}}"{% endif %}>посты</a>
-<a class="navlink" {% if besttype == "users" %}style="color:black"{% else %}href="{{besturl}}/users"{% endif %}>пользователи</a>
-<a class="navlink" {% if besttype == "comments" %}style="color:black"{% else %}href="{{besturl}}/comments"{% endif %}>ответы</a>
+{% if not besttype %}
+  <span class="navpage">посты</span>
+{% else %}
+  <a class="navlink" href="{{besturl}}">посты</a>
+{% endif %}
+{% if besttype == "users" %}
+  <span class="navpage">пользователи</span>
+{% else %}
+  <a class="navlink" href="{{besturl}}/users">пользователи</a>
+{% endif %}
+{% if besttype == "comments" %}
+  <span class="navpage">ответы</span>
+{% else %}
+  <a class="navlink" href="{{besturl}}/comments">ответы</a>
+{% endif %}
 {% endif %}

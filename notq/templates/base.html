@@ -15,6 +15,7 @@
   <a href="/"><img class="logo" src="{{ url_for('static', filename='logo.png') }}"/></a>
 {% endif %}
   <h1><a href="/" style="color:white">notq</a></h1>
+  {% include 'components/scheme_toggle.html' %}
   <ul>
     {% if g.user %}
       <li>
